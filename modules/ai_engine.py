@@ -103,6 +103,43 @@ def call_ai_with_retry(system_prompt, user_data):
         "analiz_metni": "Üzgünüm, Google API şu an aşırı yoğun. Lütfen 1 dakika sonra tekrar deneyiniz."
     }
 
+def get_chat_response(question, context_data):
+    """
+    Analiz edilen maç bağlamında kısa ve net yanıt verir.
+    """
+    if not API_KEY:
+        return "API key bulunamadı. Lütfen Google API key giriniz."
+
+    context_payload = context_data or {}
+    home_team = (
+        context_payload.get("home_team")
+        or context_payload.get("home")
+        or context_payload.get("match", {}).get("home")
+        or "Ev Sahibi"
+    )
+    away_team = (
+        context_payload.get("away_team")
+        or context_payload.get("away")
+        or context_payload.get("match", {}).get("away")
+        or "Deplasman"
+    )
+    context_text = json.dumps(context_payload, ensure_ascii=False)
+
+    system_prompt = (
+        f"Sen bir futbol analistisin. Şu an {home_team} - {away_team} maçını analiz ediyoruz. "
+        f"Elindeki veriler: {context_text}. "
+        "Kullanıcının sorusuna SADECE bu verilere dayanarak kısa ve net cevap ver. "
+        "Eğer maç dışı bir soru gelirse (örn: hava durumu, siyaset, başka ligler) "
+        "kibarca sadece bu maçı konuşabileceğini söyle."
+    )
+
+    model = genai.GenerativeModel(CURRENT_MODEL)
+    try:
+        response = model.generate_content(f"{system_prompt}\n\nSoru: {question}")
+        return response.text.strip()
+    except Exception as e:
+        return f"Üzgünüm, şu an yanıt veremiyorum. ({e})"
+
 def analyze_league_overview(league_name, stats_data):
     """
     Ligin TAKIM İSTATİSTİKLERİNİ yorumlar (JSON değil Text dönebilir).
@@ -122,9 +159,9 @@ def analyze_league_overview(league_name, stats_data):
 def generate_smart_coupon(matches_data, match_count, bet_preference):
     """
     Toplu maç verilerini alır ve seçilen stratejiye göre en iyi kombinasyonu oluşturur.
+    ARTIK ORAN MÜHENDİSLİĞİ (ODDS ENGINEERING) MANTIĞIYLA ÇALIŞIR.
     """
     
-    # AI'ya gönderilecek özet veri metnini hazırla
     matches_text = ""
     for i, m in enumerate(matches_data):
         matches_text += f"""
@@ -134,53 +171,41 @@ def generate_smart_coupon(matches_data, match_count, bet_preference):
         --------------------------------------------------
         """
 
-    # Stratejiye göre ek talimat belirle
-    strategy_instruction = ""
-    if "Banko" in bet_preference:
-        strategy_instruction = """
-        KRİTİK KURAL: Asla sadece 'Maç Sonucu' (MS) bahsine odaklanma!
-        Hedefimiz en yüksek kazanma ihtimali (%85 ve üzeri).
-        - Eğer favori takım riskliyse ama gol bekleniyorsa '1.5 ÜST' veya 'KG VAR' öner.
-        - Eğer favori kaybetmez gibiyse ama kazanması garanti değilse 'Çifte Şans (1X veya X2)' öner.
-        - Sadece ve sadece galibiyet çok netse (Örn: Lider vs Sonuncu) 'MS' öner.
-        - Oran düşük olsa bile en 'Yeşil' (Güvenli) tercihi seç.
-        """
-    elif "Gol Şov" in bet_preference:
-        strategy_instruction = "Taraf bahsinden kaçın. İki takımın da golcü olduğu, savunmaların zayıf olduğu maçları seç. Hedef: KG VAR veya 2.5 ÜST."
-    elif "Kısır" in bet_preference:
-        strategy_instruction = "Gollü maçlardan uzak dur. Savunma takımlarını, 0-0 veya 1-0 bitmeye aday maçları seç. Hedef: 2.5 ALT veya KG YOK."
-    elif "Sürpriz" in bet_preference:
-        strategy_instruction = "Favorilerin formsuz olduğu maçları bul. Oranı yüksek olacak 'Sürpriz' tahminler yap (Örn: Deplasman kazanır, İY 0)."
-    else: # Karma
-        strategy_instruction = "En dengeli kuponu yap. İster taraf, ister gol, ister korner... Veriler en çok hangi bahsi destekliyorsa onu seç."
-
     system_prompt = f"""
-    Sen "Akıl Hocası"sın. Profesyonel bir bahis stratejistisin.
+    ROLE: Sen profesyonel bir Futbol Analisti ve Matematiksel Oran Uzmanısın (Oddsmaker).
     
     GÖREVİN:
-    Aşağıdaki maç havuzunu analiz et ve kullanıcının seçtiği stratejiye EN UYGUN {match_count} maçlık bir kupon oluştur.
+    Aşağıdaki maç havuzunu analiz et ve kullanıcının seçtiği stratejiye ({bet_preference}) EN UYGUN {match_count} maçlık bir kupon oluştur.
     
-    KULLANICI STRATEJİSİ: {bet_preference}
-    ⚠️ BU STRATEJİ İÇİN ÖZEL TALİMAT: {strategy_instruction}
+    ORAN HESAPLAMA ALGORİTMASI (Bunu uygula):
+    1. OLASILIK HESABI (P): Seçilen bahsin (Örn: MS 1) gerçekleşme ihtimalini (0-100%) hesapla.
+       - Örnek: Ev sahibi çok formda -> P = %60 (0.60)
+    2. SAF ORAN (Fair Odd): 1 / P formülünü kullan.
+       - Örnek: 1 / 0.60 = 1.66
+    3. KASA MARJI (Vig): Bahis bürolarının kar payını (%5-8) düşerek piyasa oranını bul.
+       - Piyasa Oranı ≈ Saf Oran * 0.93
+       - Örnek: 1.66 * 0.93 = ~1.54
+    4. ARALIK BELİRLEME: Piyasada oluşabilecek dalgalanmayı hesaba kat (+/- 0.10).
+       - Çıktı: "1.45 - 1.60"
 
-    EK KURAL:
-    Eğer eldeki maçlardan biri, kullanıcının seçtiği stratejiye (Örn: Kısır Döngü/Alt) HİÇ UYMUYORSA ama sayı tamamlamak için eklemek zorundaysan;
-    Tahminini yine de yap (Stratejiye en yakın olanı).
-    JSON çıktısına "uygunluk": "riskli" alanını ekle (Normal maçlar için "tam_uyumlu" olsun).
-    "neden" alanına dürüstçe şunu yaz: 'UYARI: Bu maç stratejinize ters (Takımlar çok golcü) ancak maç sayısını tamamlamak için eklendi.'
-    
+    ÇIKTI KURALLARI:
+    - JSON çıktısındaki 'oran_tahmini' alanı ARTIK BİR STRING OLMALIDIR: "Alt - Üst" (Örn: "1.75 - 1.90").
+    - Favori takımlara (Real Madrid, Man City, Galatasaray vb.) karşı oynanan maçlarda oranları yapay olarak şişirme. Piyasa gerçeklerine sadık kal (1.15 - 1.30 bandı gibi).
+    - Asla tek bir sayı (1.50) verme, daima aralık ver.
+    - JSON çıktısında "neden" alanına kısa ve ikna edici bir gerekçe yaz.
+
     VERİLER:
     {matches_text}
     
-    ÇIKTI FORMATI (JSON LİSTESİ):
+    İSTENEN JSON FORMATI:
     [
       {{
         "mac": "Takım A - Takım B",
-        "tahmin": "Tahmin (Örn: MS 1)",
-        "oran_tahmini": "Tahmini Oran (Örn: 1.55)",
-        "guven": "Güven Skoru (Örn: %85)",
-        "neden": "Kısa gerekçe (Örn: Ev sahibi son 5 maçını kazandı, rakip çok eksik)",
-        "uygunluk": "riskli"
+        "tahmin": "Tahmin (Örn: MS 1, KG VAR)",
+        "oran_tahmini": "1.50 - 1.65", 
+        "guven": "%85",
+        "neden": "Ev sahibi son 5 maçını kazandı, rakip çok eksik",
+        "uygunluk": "tam_uyumlu"
       }},
       ... (İstenen sayı kadar maç)
     ]
@@ -266,3 +291,39 @@ def analyze_match_deep(home_team, away_team, match_url, standings_summary, leagu
     """
     
     return call_ai_with_retry(system_prompt, match_data)
+
+def analyze_spor_toto_column(matches):
+    """
+    15 Maçlık Spor Toto listesi için hem Toto tahmini hem de Banko İddaa tercihi yapar.
+    """
+    matches_text = ""
+    for i, m in enumerate(matches):
+        matches_text += f"MAÇ {i+1}: {m['home']} vs {m['away']} ({m['date']})\n"
+
+    system_prompt = """
+    ROLE: Sen Türkiye Spor Toto ve İddaa uzmanısın.
+    
+    GÖREV:
+    Aşağıdaki 15 maçı analiz et. Her maç için iki farklı çıktı üretmelisin:
+    1. SPOR TOTO TAHMİNİ: 15'te 15 yapmayı hedefleyen, sürprizleri de koklayan sonuç (1, 0, 2).
+    2. BANKO BAHİS TERCİHİ: İddaa bültenindeki en güvenilir, riskten uzak seçenek.
+    
+    BANKO BAHİS KURALLARI:
+    - Sadece maç sonucu (MS) ile sınırlı kalma.
+    - Gol bahisleri (1.5 Üst, 3.5 Alt, KG Var/Yok), Çifte Şans, Korner, Ev Sahibi Gol Atar gibi seçenekleri değerlendir.
+    - Amacın en yüksek oranı bulmak değil, EN YÜKSEK TUTMA OLASILIĞINI (Green Check) bulmaktır.
+    
+    İSTENEN JSON FORMATI:
+    [
+      {
+        "mac_no": 1,
+        "karsilasma": "Takım A - Takım B",
+        "tahmin": "1",
+        "banko_tercih": "KG VAR",
+        "neden": "İki takım da çok gol atıp yiyor, taraf bahsi riskli ama gol banko."
+      },
+      ... (15 maç için)
+    ]
+    """
+    
+    return call_ai_with_retry(system_prompt, {"matches": matches_text})

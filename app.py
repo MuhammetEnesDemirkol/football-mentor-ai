@@ -2,6 +2,7 @@ import sys
 import asyncio
 import io
 import textwrap
+import re
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import time
@@ -31,11 +32,33 @@ def _normalize_coupon_items(coupon_data):
     return items
 
 def _extract_odd_value(odd_val):
-    import re as _re
-    match_odd = _re.search(r"\d+(?:[.,]\d+)?", str(odd_val))
+    import re
+    val_str = str(odd_val).strip().replace(",", ".")
+
+    # Aralık Kontrolü (Örn: "1.45 - 1.60")
+    if "-" in val_str:
+        try:
+            parts = val_str.split("-")
+            # Her parçadaki sayıyı bul (örn: " 1.45 " -> 1.45)
+            nums = []
+            for p in parts:
+                match = re.search(r"\d+(?:\.\d+)?", p)
+                if match:
+                    nums.append(float(match.group(0)))
+            
+            if len(nums) >= 2:
+                # Aralığın ortalamasını al
+                return sum(nums) / len(nums)
+            elif len(nums) == 1:
+                return nums[0]
+        except Exception:
+            pass
+
+    # Tekil Sayı Kontrolü (Eski usul devam)
+    match_odd = re.search(r"\d+(?:\.\d+)?", val_str)
     if match_odd:
         try:
-            return float(match_odd.group(0).replace(",", "."))
+            return float(match_odd.group(0))
         except Exception:
             return None
     return None
@@ -108,6 +131,114 @@ def create_coupon_image(coupon_data, total_odd):
     buffer.seek(0)
     return buffer
 
+def show_full_page_loader(status_text="Yapay Zeka Verileri İşliyor..."):
+    """
+    Tüm sayfayı kaplayan, blur efektli modern bir yükleme ekranı gösterir.
+    """
+    loading_html = f"""
+    <style>
+        /* Tam Ekran Kaplama */
+        .stApp {{ overflow: hidden; }} /* Kaydırmayı engelle */
+        .loader-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 17, 32, 0.95); /* Derin Lacivert, Yüksek Opaklık */
+            backdrop-filter: blur(8px);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #4ade80;
+            font-family: 'Poppins', sans-serif;
+        }}
+        
+        /* Radar Animasyonu */
+        .radar-container {{
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+        }}
+        
+        .radar-circle {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: 2px solid rgba(74, 222, 128, 0.3);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(74, 222, 128, 0.1);
+        }}
+        
+        .radar-scanner {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, transparent 60%, rgba(74, 222, 128, 0.6) 100%);
+            animation: radar-spin 1.5s linear infinite;
+        }}
+        
+        .football-core {{
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px; height: 50px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #4ade80;
+            animation: core-pulse 1.5s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #0b1120;
+        }}
+        
+        /* Animasyon Keyframes */
+        @keyframes radar-spin {{
+            from {{ transform: rotate(0deg); }}
+            to {{ transform: rotate(360deg); }}
+        }}
+        
+        @keyframes core-pulse {{
+            0% {{ transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }}
+            50% {{ transform: translate(-50%, -50%) scale(1.1); opacity: 1; box-shadow: 0 0 40px #4ade80; }}
+            100% {{ transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }}
+        }}
+        
+        .loading-text {{
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: text-blink 2s infinite;
+        }}
+        
+        @keyframes text-blink {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.5; }}
+        }}
+    </style>
+    
+    <div class="loader-overlay">
+        <div class="radar-container">
+            <div class="radar-circle"></div>
+            <div class="radar-scanner"></div>
+            <div class="football-core">⚽</div>
+        </div>
+        <div class="loading-text">{status_text}</div>
+    </div>
+    """
+    
+    # Placeholder oluştur ve HTML'i içine bas
+    placeholder = st.empty()
+    placeholder.markdown(loading_html, unsafe_allow_html=True)
+    return placeholder
+
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Akıl Hocası Pro ⚽", page_icon="🏟️", layout="wide")
 
@@ -173,6 +304,278 @@ try:
 except Exception as e:
     st.error(f"API Key hatası: {e}")
     st.stop()
+
+# --- CHAT STATE ---
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "current_analysis_context" not in st.session_state:
+    st.session_state.current_analysis_context = None
+if "current_analysis_match" not in st.session_state:
+    st.session_state.current_analysis_match = {}
+if "league_cache" not in st.session_state:
+    st.session_state.league_cache = {}
+if "wizard_step" not in st.session_state:
+    st.session_state.wizard_step = 1
+if "show_wizard" not in st.session_state:
+    st.session_state.show_wizard = False
+if "risk_profile" not in st.session_state:
+    st.session_state.risk_profile = "🛡️ BANKO"
+if "game_focus" not in st.session_state:
+    st.session_state.game_focus = "🤖 Yapay Zeka Tercihi"
+if "analyze_limit" not in st.session_state:
+    st.session_state.analyze_limit = 8
+if "wizard_date_range" not in st.session_state:
+    st.session_state.wizard_date_range = (
+        datetime.date.today(),
+        datetime.date.today() + datetime.timedelta(days=1)
+    )
+if "start_analysis" not in st.session_state:
+    st.session_state.start_analysis = False
+if "wizard_leagues" not in st.session_state:
+    st.session_state.wizard_leagues = []
+if "wizard_combined_matches" not in st.session_state:
+    st.session_state.wizard_combined_matches = []
+if "wizard_blacklist" not in st.session_state:
+    st.session_state.wizard_blacklist = []
+if "wizard_c_count" not in st.session_state:
+    st.session_state.wizard_c_count = 3
+if "wizard_only_big_teams" not in st.session_state:
+    st.session_state.wizard_only_big_teams = False
+if "wizard_analyze_limit" not in st.session_state:
+    st.session_state.wizard_analyze_limit = 8
+if "wizard_params" not in st.session_state:
+    st.session_state.wizard_params = {}
+
+combined_matches = []
+create_btn = False
+wiz_leagues = []
+
+# --- DEVLER LİSTESİ (KUPON MÜHENDİSİ FİLTRESİ) ---
+BIG_TEAMS = [
+    "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor",
+    "Manchester City", "Liverpool", "Arsenal", "Manchester Utd", "Chelsea",
+    "Real Madrid", "Barcelona", "Atletico Madrid",
+    "Bayern Munchen", "Dortmund", "Leverkusen",
+    "PSG", "Monaco", "Lille",
+    "Inter", "Milan", "Juventus", "Napoli"
+]
+
+def _is_big_team(team_name):
+    if not team_name:
+        return False
+    team_lower = str(team_name).lower()
+    return any(big_team.lower() in team_lower for big_team in BIG_TEAMS)
+
+def open_wizard_trigger():
+    st.session_state.show_wizard = True
+    st.session_state.wizard_step = 1
+
+@st.dialog("🎯 Kupon Tasarım Sihirbazı")
+def show_coupon_wizard():
+    with st.container():
+        # --- ADIM 3: FİNAL AYARLAR (Limitler ve Tarih) ---
+        if st.session_state.wizard_step == 3:
+            st.markdown("### 🛠️ Adım 3: İnce Ayarlar")
+            
+            # 1. TARİH FİLTRESİ (YENİ EKLENDİ)
+            st.markdown("#### 📅 Tarih Aralığı")
+            st.session_state.wizard_date_range = st.date_input(
+                "Hangi tarihli maçlar taransın?",
+                value=st.session_state.wizard_date_range,
+                min_value=datetime.date.today(),
+                format="DD.MM.YYYY"
+            )
+            
+            col_limit, col_count = st.columns(2)
+            
+            # 2. TARANACAK HAVUZ SLIDER (YENİ EKLENDİ)
+            with col_limit:
+                st.markdown("#### 🔍 Tarama Havuzu")
+                st.session_state.analyze_limit = st.slider(
+                    "Kaç maç analiz edilsin?",
+                    min_value=5,
+                    max_value=20,
+                    value=st.session_state.analyze_limit,
+                    help="Sayı arttıkça yapay zeka daha fazla maçı inceler ama işlem süresi uzar."
+                )
+                st.caption(f"⚠️ Tahmini Süre: ~{st.session_state.analyze_limit * 8} saniye")
+
+            # 3. KUPON MAÇ SAYISI
+            with col_count:
+                st.markdown("#### 🎫 Maç Sayısı")
+                st.session_state.wizard_c_count = st.slider(
+                    "Kuponda kaç maç olsun?",
+                    min_value=1,
+                    max_value=5,
+                    value=st.session_state.wizard_c_count
+                )
+
+            st.markdown("---")
+            
+            # 4. FİLTRELER
+            st.session_state.wizard_only_big_teams = st.checkbox(
+                "🏆 Sadece Büyük Takımlar (Devler Ligi)",
+                value=st.session_state.wizard_only_big_teams
+            )
+
+            combined_matches = st.session_state.get("wizard_combined_matches", [])
+            all_teams = sorted(
+                {m.get("home") for m in combined_matches if m.get("home")}
+                | {m.get("away") for m in combined_matches if m.get("away")}
+            )
+            st.session_state.wizard_blacklist = st.multiselect(
+                "⛔ Kara Liste (Bu Takımları Pas Geç)",
+                options=all_teams,
+                default=st.session_state.wizard_blacklist
+            )
+
+            col_back, col_finish = st.columns([1, 2])
+            with col_back:
+                if st.button("⬅️ Geri", use_container_width=True):
+                    st.session_state.wizard_step = 2
+                    st.session_state.show_wizard = True
+                    st.rerun()
+            
+            with col_finish:
+                if st.button("Mühendisliği Başlat ve Kuponu Yarat 🚀", type="primary", use_container_width=True):
+                    st.session_state.wizard_params = {
+                        "c_count": st.session_state.wizard_c_count,
+                        "analyze_limit": st.session_state.analyze_limit,
+                        "risk_profile": st.session_state.risk_profile,
+                        "game_focus": st.session_state.game_focus,
+                        "blacklist": st.session_state.wizard_blacklist,
+                        "only_big_teams": st.session_state.wizard_only_big_teams,
+                        "date_range": st.session_state.wizard_date_range
+                    }
+                    st.session_state.start_analysis = True
+                    st.session_state.show_wizard = False
+                    st.session_state.wizard_step = 1
+                    st.rerun()
+            return
+
+        # --- ADIM 2: STRATEJİ ---
+        if st.session_state.wizard_step == 2:
+            st.markdown("""
+            <style>
+            .wizard-card {
+                border: 1px solid #334155;
+                border-radius: 14px;
+                padding: 16px;
+                background: rgba(15, 23, 42, 0.6);
+                text-align: center;
+                margin-bottom: 10px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .wizard-card:hover { border-color: #60a5fa; }
+            .wizard-card.selected {
+                border: 2px solid #3b82f6;
+                background: rgba(59, 130, 246, 0.1);
+                box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
+            }
+            .wizard-icon { font-size: 2rem; margin-bottom: 6px; }
+            .wizard-title { font-weight: 800; font-size: 1.05rem; color: white; }
+            .wizard-desc { color: #94a3b8; font-size: 0.85rem; margin-top: 6px; }
+            </style>
+            """, unsafe_allow_html=True)
+
+            st.write("### Adım 2: Kupon Stratejisi")
+            
+            # Risk Kartları
+            st.markdown("#### Risk Profili")
+            risk_options = [
+                ("🛡️ BANKO", "Düşük Risk, Yüksek Olasılık"),
+                ("⚖️ İDEAL", "Dengeli Kazanç ve Risk"),
+                ("💣 SÜRPRİZ", "Yüksek Oran, Maksimum Risk")
+            ]
+            cols = st.columns(3)
+            for idx, (title, desc) in enumerate(risk_options):
+                with cols[idx]:
+                    is_selected = st.session_state.risk_profile == title
+                    card_class = "wizard-card selected" if is_selected else "wizard-card"
+                    st.markdown(
+                        f"""
+                        <div class="{card_class}">
+                            <div class="wizard-icon">{title.split()[0]}</div>
+                            <div class="wizard-title">{title}</div>
+                            <div class="wizard-desc">{desc}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    if st.button("Seç", key=f"risk_btn_{idx}", use_container_width=True):
+                        st.session_state.risk_profile = title
+                        st.session_state.show_wizard = True
+                        st.rerun() # Seçim yapınca görsel güncellensin
+
+            # Odak Noktası
+            st.markdown("#### Oyun Odak Noktası")
+            focus_options = ["🤖 Yapay Zeka Tercihi", "⚽ Gol Odaklı", "🥅 Taraf Odaklı", "🚩 Özel Bahisler"]
+            
+            # Pills varsa kullan yoksa radio
+            if hasattr(st, "pills"):
+                st.session_state.game_focus = st.pills("Odak", focus_options, default=st.session_state.game_focus, label_visibility="collapsed")
+            else:
+                st.session_state.game_focus = st.radio("Odak", focus_options, horizontal=True, label_visibility="collapsed")
+
+            nav_l, nav_r = st.columns(2)
+            with nav_l:
+                if st.button("⬅️ Geri", use_container_width=True):
+                    st.session_state.wizard_step = 1
+                    st.session_state.show_wizard = True
+                    st.rerun()
+            with nav_r:
+                if st.button("Sonraki Adım ➡️", use_container_width=True):
+                    st.session_state.wizard_step = 3
+                    st.session_state.show_wizard = True
+                    st.rerun()
+            return
+
+        # --- ADIM 1: LİG SEÇİMİ ---
+        st.write("### Adım 1: Kapsam Belirleme")
+        
+        # Lig listesi cache kontrolü
+        available_leagues = list(st.session_state.leagues_map.keys())
+        pre_selected = list(st.session_state.league_cache.keys())
+        
+        wiz_leagues = st.multiselect(
+            "Ligleri Seç",
+            options=available_leagues,
+            default=pre_selected
+        )
+        st.session_state.wizard_leagues = wiz_leagues
+
+        # Eksik veri kontrolü
+        missing_leagues = [L for L in wiz_leagues if L not in st.session_state.league_cache]
+        
+        if missing_leagues:
+            st.warning(f"⚠️ Verisi eksik ligler: {', '.join(missing_leagues)}")
+            if st.button("📥 Eksik Verileri Şimdi İndir", type="primary"):
+                progress = st.progress(0)
+                for i, lname in enumerate(missing_leagues):
+                    l_val = st.session_state.leagues_map[lname]
+                    data = scraper.get_fixture_and_standings(l_val)
+                    for m in data["matches"]:
+                        m["league_name"] = lname
+                    st.session_state.league_cache[lname] = data["matches"]
+                    progress.progress((i+1)/len(missing_leagues))
+                st.success("Veriler tamamlandı!")
+                st.rerun()
+        else:
+            # Maç sayısını hesapla
+            total_m = sum([len(st.session_state.league_cache.get(l, [])) for l in wiz_leagues])
+            st.session_state.wizard_combined_matches = []
+            for l in wiz_leagues:
+                st.session_state.wizard_combined_matches.extend(st.session_state.league_cache.get(l, []))
+                
+            if total_m > 0:
+                st.success(f"✅ Analize Hazır: {total_m} Maç")
+                if st.button("Sonraki Adım ➡️", use_container_width=True):
+                    st.session_state.wizard_step = 2
+                    st.session_state.show_wizard = True
+                    st.rerun()
+            else:
+                st.info("Lütfen en az bir lig seçin.")
 
 # --- MODERN CSS & TASARIM ---
 st.markdown("""
@@ -548,39 +951,33 @@ with st.sidebar:
             selected_league_value = st.session_state.leagues_map[selected_league_name]
 
             if st.button("📥 Verileri Getir", type="primary", use_container_width=True):
-                with st.spinner("Veriler indiriliyor..."):
+                # --- LOADER BAŞLAT ---
+                loader = show_full_page_loader("📥 Lig Verileri İndiriliyor...")
+                try:
                     data = scraper.get_fixture_and_standings(selected_league_value)
+                    for m in data["matches"]:
+                        m["league_name"] = selected_league_name
                     st.session_state.current_fixture = data["matches"]
+                    st.session_state.league_cache[selected_league_name] = data["matches"]
                     st.session_state.current_standings = data["standings"]
                     if 'league_stats' in st.session_state: del st.session_state.league_stats
+                    
                     st.success("Hazır!")
                     time.sleep(0.5)
                     st.rerun()
+                except Exception as e:
+                    st.error(f"Veri hatası: {e}")
+                finally:
+                    # İşlem bitince animasyonu kaldır
+                    loader.empty()
 
         with st.expander("⚙️ KUPON AYARLARI", expanded=True):
             st.markdown("<div class='sidebar-section-title'>Sihirbaz</div>", unsafe_allow_html=True)
-            st.markdown("<div class='sidebar-section-title'>Kupon Ligleri</div>", unsafe_allow_html=True)
-            wiz_leagues = st.multiselect(
-                "Ligleri Seç", 
-                list(st.session_state.leagues_map.keys()) if st.session_state.leagues_map else [], 
-                default=[selected_league_name] if 'selected_league_name' in locals() else None
+            st.button(
+                "🎯 Yeni Kupon Tasarla",
+                use_container_width=True,
+                on_click=open_wizard_trigger
             )
-
-            use_date_filter = st.checkbox("📅 Tarih Filtresi Uygula")
-            wiz_date = None
-            if use_date_filter:
-                wiz_date = st.date_input("Hangi Tarihteki Maçlar?", datetime.date.today())
-
-            c_count = st.slider("Maç Sayısı", 1, 5, 3)
-            c_type = st.selectbox("Bahis Stratejisi", [
-                "✨ Akıl Hocası'nın Karması (Önerilen)",
-                "🛡️ Banko Kupon (En Garanti Tercihler - Gol/Taraf)",
-                "🔥 Gol Şov (2.5 ÜST / KG VAR)",
-                "🔒 Kısır Döngü (2.5 ALT / KG YOK)",
-                "💣 Yüksek Oran & Sürpriz Arayışı"
-            ])
-            analyze_limit = st.slider("Taranacak Maç Havuzu", 5, 20, 8)
-            create_btn = st.button("Sihirli Kuponu Yarat ✨", type="primary", use_container_width=True)
 
         with st.expander("🔑 SİSTEM", expanded=False):
             st.markdown("<div class='sidebar-section-title'>Hesap</div>", unsafe_allow_html=True)
@@ -602,89 +999,137 @@ with st.sidebar:
                 unsafe_allow_html=True
             )
 
+if st.session_state.show_wizard:
+    show_coupon_wizard()
+
 
 # --- ANA EKRAN ---
 st.markdown('<div class="main-title">AKIL HOCASI PRO</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Yapay Zeka Destekli Futbol Analiz Asistanı</div>', unsafe_allow_html=True)
 
 # --- KUPON OLUŞTURMA ---
-if create_btn and wiz_leagues:
+if st.session_state.get("start_analysis"):
     progress_bar = st.progress(0)
     status_text = st.empty()
     collected_matches = []
+    combined_matches = st.session_state.get("wizard_combined_matches", [])
+    total_matches = len(combined_matches)
+    wizard_params = st.session_state.get("wizard_params", {})
+    c_count = wizard_params.get("c_count", st.session_state.wizard_c_count)
+    analyze_limit = wizard_params.get("analyze_limit", st.session_state.analyze_limit)
+    only_big_teams = wizard_params.get("only_big_teams", st.session_state.wizard_only_big_teams)
+    blacklist = wizard_params.get("blacklist", st.session_state.wizard_blacklist)
+    date_range = wizard_params.get("date_range", st.session_state.wizard_date_range)
+    if isinstance(date_range, datetime.date):
+        date_range = (date_range, date_range)
+    if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
+        date_start, date_end = date_range
+    else:
+        date_start, date_end = None, None
     
-    total_leagues = len(wiz_leagues)
-    target_date_str = wiz_date.strftime("%d/%m") if wiz_date else ""
+    status_text.text("🔍 Havuz filtreleniyor (Tarih ve Kriterler)...")
+    for idx, m in enumerate(combined_matches):
+        match_date = None
+        raw_date = m.get("date", "")
+        if isinstance(raw_date, datetime.datetime):
+            match_date = raw_date.date()
+        elif isinstance(raw_date, datetime.date):
+            match_date = raw_date
+        elif raw_date:
+            date_text = str(raw_date)
+            date_match = re.search(r"(\d{1,2})[./-](\d{1,2})", date_text)
+            if date_match:
+                try:
+                    day = int(date_match.group(1))
+                    month = int(date_match.group(2))
+                    year = datetime.date.today().year
+                    match_date = datetime.date(year, month, day)
+                except Exception:
+                    match_date = None
+
+        if date_start and date_end:
+            if match_date is None:
+                continue
+            if not (date_start <= match_date <= date_end):
+                continue
+        if only_big_teams:
+            if not (_is_big_team(m.get("home")) or _is_big_team(m.get("away"))):
+                continue
+        if blacklist:
+            if m.get("home") in blacklist or m.get("away") in blacklist:
+                continue
+        collected_matches.append(m)
+        if total_matches:
+            progress_bar.progress((idx + 1) / total_matches)
     
-    for idx, lname in enumerate(wiz_leagues):
-        status_text.text(f"🔍 {lname} taranıyor...")
-        try:
-            lval = st.session_state.leagues_map[lname]
-            data = scraper.get_fixture_and_standings(lval)
-            for m in data["matches"]:
-                if use_date_filter:
-                    if 'date' in m and target_date_str in m['date']:
-                        m['league_name'] = lname 
-                        collected_matches.append(m)
-                else:
-                    m['league_name'] = lname
-                    collected_matches.append(m)
-        except: pass
-        progress_bar.progress((idx + 1) / total_leagues)
+    if only_big_teams:
+        status_text.text(f"🔍 Kriterlere uygun {len(collected_matches)} Dev Maç bulundu")
     
     if not collected_matches:
         st.error(f"❌ Kriterlere uygun maç bulunamadı.")
     else:
-        status_text.text(f"🧠 {len(collected_matches)} maç analiz ediliyor...")
-        pool = collected_matches[:analyze_limit]
-        ai_pool = []
-        
-        for i, m in enumerate(pool):
-            status_text.text(f"Analiz: {m['home']} vs {m['away']}")
-            try:
-                details = scraper.get_match_deep_stats(m['url'])
-                ai_pool.append({
-                    "home": m['home'], "away": m['away'], "lig": m['league_name'],
-                    "insights": details["yellow_box"],
-                    "stats": "Detaylı analiz yapılıyor..."
-                })
-            except: pass
-            progress_bar.progress((i+1)/len(pool))
+        # --- LOADER BAŞLAT ---
+        loader_placeholder = show_full_page_loader("🧠 Yapay Zeka Kuponu Tasarlıyor...")
+        try:
+            status_text.text(f"🧠 {len(collected_matches)} maç analiz ediliyor...")
+            pool = collected_matches[:analyze_limit]
+            ai_pool = []
             
-        status_text.text("🤖 Kupon oluşturuluyor...")
-        coupon = ai_engine.generate_smart_coupon(ai_pool, c_count, c_type)
-        if coupon:
-            st.session_state.generated_coupon = coupon
-
-            total_odd = 1.0
-            coupon_items = coupon
-            if isinstance(coupon_items, str):
+            for i, m in enumerate(pool):
+                status_text.text(f"Analiz: {m['home']} vs {m['away']}")
                 try:
-                    import json as _json
-                    coupon_items = _json.loads(coupon_items)
-                except Exception:
-                    coupon_items = []
-            if isinstance(coupon_items, dict):
-                coupon_items = [coupon_items]
-            if isinstance(coupon_items, list):
-                for pick in coupon_items:
-                    odd_str = pick.get('oran_tahmini', '1.0')
+                    details = scraper.get_match_deep_stats(m['url'])
+                    ai_pool.append({
+                        "home": m['home'], "away": m['away'], "lig": m['league_name'],
+                        "insights": details["yellow_box"],
+                        "stats": "Detaylı analiz yapılıyor..."
+                    })
+                except: pass
+                progress_bar.progress((i+1)/len(pool))
+                
+            status_text.text("🤖 Kupon oluşturuluyor...")
+            c_type = (
+                f"{wizard_params.get('risk_profile', st.session_state.risk_profile)} | "
+                f"Odak: {wizard_params.get('game_focus', st.session_state.game_focus)}. "
+                "(ÖNEMLİ: Banko seçildiyse taraf bahsi zorunlu değil, "
+                "istatistiksel olasılığı en yüksek tercihi yap.)"
+            )
+            coupon = ai_engine.generate_smart_coupon(ai_pool, c_count, c_type)
+            if coupon:
+                st.session_state.generated_coupon = coupon
+
+                total_odd = 1.0
+                coupon_items = coupon
+                if isinstance(coupon_items, str):
                     try:
-                        import re as _re
-                        match = _re.search(r"\d+(?:[.,]\d+)?", odd_str)
-                        if match:
-                            val = float(match.group(0).replace(',', '.'))
-                            total_odd *= val
+                        import json as _json
+                        coupon_items = _json.loads(coupon_items)
                     except Exception:
-                        pass
+                        coupon_items = []
+                if isinstance(coupon_items, dict):
+                    coupon_items = [coupon_items]
+                if isinstance(coupon_items, list):
+                    for pick in coupon_items:
+                        odd_str = pick.get('oran_tahmini', '1.0')
+                        try:
+                            import re as _re
+                            match = _re.search(r"\d+(?:[.,]\d+)?", odd_str)
+                            if match:
+                                val = float(match.group(0).replace(',', '.'))
+                                total_odd *= val
+                        except Exception:
+                            pass
 
-            total_odd_string = f"{total_odd:.2f}"
-            data_manager.add_coupon(coupon, total_odd_string)
+                total_odd_string = f"{total_odd:.2f}"
+                data_manager.add_coupon(coupon, total_odd_string)
 
-            st.toast("Kupon hazırlandı ve kaydedildi! Sağ alttaki butona tıklayın.", icon="🎫")
+                st.toast("Kupon hazırlandı ve kaydedildi! Sağ alttaki butona tıklayın.", icon="🎫")
+        finally:
+            loader_placeholder.empty()
         
     progress_bar.empty()
     status_text.empty()
+    st.session_state.start_analysis = False
 
 @st.dialog("🔥 AKIL HOCASI KUPONU")
 def show_coupon_modal():
@@ -744,8 +1189,10 @@ def show_coupon_modal():
         use_container_width=True
     )
 
+# --- FLOATING BUTTON (Çapa Yöntemi ile Sabitleme) ---
 has_coupon = bool(st.session_state.get("generated_coupon"))
 total_odd = 0.0
+
 if has_coupon:
     coupon_items = _normalize_coupon_items(st.session_state.generated_coupon)
     total_odd = 1.0
@@ -754,435 +1201,455 @@ if has_coupon:
         if odd_num:
             total_odd *= odd_num
 
-st.markdown("""
-<style>
-a#coupon_fab {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 999;
-    border-radius: 50px;
-    background-color: #0f172a;
-    color: #4ade80;
-    border: 2px solid #334155;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    padding: 15px 30px;
-    font-weight: bold;
-    text-decoration: none;
-    display: inline-block;
-}
-a#coupon_fab:hover {
-    background-color: #1e293b;
-    transform: scale(1.05);
-}
-a#coupon_fab.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-    transform: none;
-}
-</style>
-""", unsafe_allow_html=True)
-
 label_suffix = f"{total_odd:.2f} Oran" if has_coupon else "Hazır Değil"
-fab_class = "" if has_coupon else "disabled"
-fab_href = "?open_coupon=1" if has_coupon else "#"
-st.markdown(
-    f"<a id=\"coupon_fab\" class=\"{fab_class}\" href=\"{fab_href}\">🎫 KUPONU AÇ ({label_suffix})</a>",
-    unsafe_allow_html=True
-)
 
-if st.query_params.get("open_coupon") == "1":
-    show_coupon_modal()
-    st.query_params.clear()
+if has_coupon:
+    # 1. ADIM: Butonu hedeflemek için benzersiz bir görünmez 'Çapa' (Anchor) ekliyoruz.
+    st.markdown('<div id="floating-coupon-anchor"></div>', unsafe_allow_html=True)
 
-# --- İÇERİK SEKMELERİ ---
-if 'current_fixture' in st.session_state and st.session_state.current_fixture:
-    t1, t2, t3 = st.tabs(["⚽ Analiz", "📊 Lig Röntgeni", "🗂️ Geçmişim"])
+    # 2. ADIM: CSS ile bu çapanın hemen yanındaki butonu yakalıyoruz.
+    st.markdown("""
+    <style>
+    /* MANTIK: "floating-coupon-anchor" ID'sine sahip div'i içeren markdown elementinin 
+       hemen sonrasındaki (sibling) .stButton div'ini bul ve sabitle.
+       Bu yöntem Sidebar'daki butonları ASLA etkilemez.
+    */
+    div[data-testid="stMarkdown"]:has(div#floating-coupon-anchor) + div.stButton {
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 30px !important;
+        z-index: 99999 !important;
+        width: auto !important;
+    }
 
-    with t1:
-        col_sel, col_btn = st.columns([3, 1])
-        with col_sel:
-            match_options = [f"{m['home']} - {m['away']}" for m in st.session_state.current_fixture]
-            selected_match_label = st.selectbox("Analiz Edilecek Maç:", match_options)
+    /* Butonun Görsel Tasarımı */
+    div[data-testid="stMarkdown"]:has(div#floating-coupon-anchor) + div.stButton > button {
+        border-radius: 50px !important;
+        background-color: #0f172a !important;
+        color: #4ade80 !important;
+        border: 2px solid #334155 !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+        padding: 15px 30px !important;
+        font-weight: bold !important;
+        font-size: 1.1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    /* Hover Efekti */
+    div[data-testid="stMarkdown"]:has(div#floating-coupon-anchor) + div.stButton > button:hover {
+        background-color: #1e293b !important;
+        transform: scale(1.05);
+        border-color: #4ade80 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 3. ADIM: Butonu çiziyoruz. (Çapa'nın hemen altında olduğu için CSS bunu yakalar)
+    if st.button(f"🎫 KUPONU AÇ ({label_suffix})", key="fab_open_coupon"):
+        show_coupon_modal()
+
+# --- İÇERİK SEKMELERİ (GÜNCELLENMİŞ YAPI) ---
+# Ana sekmeleri en dışta tanımlıyoruz ki her zaman erişilebilir olsunlar.
+main_tab1, main_tab2, main_tab3 = st.tabs(["⚽ Lig Merkezi", "🇹🇷 Spor Toto", "🗂️ Kupon Geçmişi"])
+
+# -------------------------
+# SEKME 1: LİG MERKEZİ
+# -------------------------
+with main_tab1:
+    # Eğer veri çekildiyse (Analiz Modu)
+    if 'current_fixture' in st.session_state and st.session_state.current_fixture:
+        # Alt sekmeler (Analiz, Chat, Röntgen)
+        sub_t1, sub_t2, sub_t3 = st.tabs(["Analiz Masası", "Asistana Sor", "Lig Röntgeni"])
         
-        selected_match_obj = next((m for m in st.session_state.current_fixture if f"{m['home']} - {m['away']}" == selected_match_label), None)
-
-        if selected_match_obj:
-            # --- YENİ SKORBORD TASARIMI ---
-            home_avatar = selected_match_obj['home'][0]
-            away_avatar = selected_match_obj['away'][0]
+        with sub_t1:
+            col_sel, col_btn = st.columns([3, 1])
+            with col_sel:
+                match_options = [f"{m['home']} - {m['away']}" for m in st.session_state.current_fixture]
+                selected_match_label = st.selectbox("Analiz Edilecek Maç:", match_options)
             
-            st.markdown(f"""
-            <div class="match-header-container">
-                <div class="team-container">
-                    <div class="team-avatar">{home_avatar}</div>
-                    <div class="team-name">{selected_match_obj['home']}</div>
-                    <div class="team-role">EV SAHİBİ</div>
-                </div>
-                <div class="vs-badge">VS</div>
-                <div class="team-container">
-                    <div class="team-avatar away">{away_avatar}</div>
-                    <div class="team-name">{selected_match_obj['away']}</div>
-                    <div class="team-role">DEPLASMAN</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            selected_match_obj = next((m for m in st.session_state.current_fixture if f"{m['home']} - {m['away']}" == selected_match_label), None)
 
-            if st.button("🚀 MAÇI ANALİZ ET", type="primary", use_container_width=True):
-                if 'league_stats' not in st.session_state:
-                    with st.status("Veri eksikliği tespit edildi, lig istatistikleri çekiliyor...", expanded=True) as status:
-                        try:
-                            league_stats = scraper.get_league_detailed_stats(selected_league_value)
-                            st.session_state.league_stats = league_stats
-                            status.update(label="Lig verileri tamamlandı!", state="complete", expanded=False)
-                        except: pass
+            if selected_match_obj:
+                # SKORBORD GÖRÜNÜMÜ
+                home_avatar = selected_match_obj['home'][0]
+                away_avatar = selected_match_obj['away'][0]
                 
-                with st.spinner("🧠 Yapay Zeka maçı analiz ediyor..."):
-                    league_stats_data = st.session_state.get('league_stats', None)
-                    @st.cache_data(show_spinner=False, ttl=3600)
-                    def get_cached_analysis(home, away, url, standings, stats):
-                        return ai_engine.analyze_match_deep(home, away, url, standings, stats)
+                st.markdown(f"""
+                <div class="match-header-container">
+                    <div class="team-container">
+                        <div class="team-avatar">{home_avatar}</div>
+                        <div class="team-name">{selected_match_obj['home']}</div>
+                        <div class="team-role">EV SAHİBİ</div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="team-container">
+                        <div class="team-avatar away">{away_avatar}</div>
+                        <div class="team-name">{selected_match_obj['away']}</div>
+                        <div class="team-role">DEPLASMAN</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                    ai_response = get_cached_analysis(
-                        selected_match_obj['home'], selected_match_obj['away'], selected_match_obj['url'],
-                        st.session_state.current_standings, league_stats_data
-                    )
-                    
-                    if ai_response:
-                        match_name = f"{selected_match_obj['home']} - {selected_match_obj['away']}"
-                        data_manager.add_analysis(match_name, ai_response)
+                if st.button("🚀 MAÇI ANALİZ ET", type="primary", use_container_width=True):
+                    # --- LOADER BAŞLAT ---
+                    loader_placeholder = show_full_page_loader("⚡ Maç Simüle Ediliyor...")
+                    try:
+                        st.session_state.chat_history = []
+                        st.session_state.current_analysis_context = None
+                        st.session_state.current_analysis_match = {}
                         
-                        def _extract_team_stats(team_name, stats_data):
-                            if not stats_data or "team_stats" not in stats_data:
-                                return {}
-                            for item in stats_data.get("team_stats", []):
-                                try:
-                                    parts = item.split("->")
-                                    if len(parts) < 2:
-                                        continue
-                                    team = parts[0].strip()
-                                    if team_name.lower() not in team.lower() and team.lower() not in team_name.lower():
-                                        continue
-                                    stats_part = parts[1]
-                                    stats = {}
-                                    for stat in stats_part.split(","):
-                                        if ":" in stat:
-                                            k, v = stat.split(":")
-                                            stats[k.strip()] = v.strip()
-                                    return stats
-                                except Exception:
-                                    continue
-                            return {}
-
-                        def _parse_stat(stats, key):
-                            if key not in stats:
-                                return 0.0
+                        # Lig istatistikleri yoksa çek
+                        league_stats_data = st.session_state.get('league_stats', None)
+                        if not league_stats_data:
                             try:
-                                return float(str(stats[key]).replace("%", "").replace(",", ".").strip())
-                            except Exception:
-                                return 0.0
+                                league_stats_data = scraper.get_league_detailed_stats(st.session_state.leagues_map[st.session_state.sb_selected_league])
+                                st.session_state.league_stats = league_stats_data
+                            except: pass
 
-                        def _normalize(value, max_value):
-                            return min(100.0, (value / max_value) * 100.0) if max_value else 0.0
+                        @st.cache_data(show_spinner=False, ttl=3600)
+                        def get_cached_analysis(home, away, url, standings, stats):
+                            return ai_engine.analyze_match_deep(home, away, url, standings, stats)
 
-                        home_stats = _extract_team_stats(selected_match_obj['home'], league_stats_data)
-                        away_stats = _extract_team_stats(selected_match_obj['away'], league_stats_data)
-
-                        home_gol_val = _parse_stat(home_stats, "Gol/M")
-                        home_shot_val = _parse_stat(home_stats, "Şut/M")
-                        home_poss_val = _parse_stat(home_stats, "TSO")
-
-                        away_gol_val = _parse_stat(away_stats, "Gol/M")
-                        away_shot_val = _parse_stat(away_stats, "Şut/M")
-                        away_poss_val = _parse_stat(away_stats, "TSO")
-
-                        home_gol = _normalize(home_gol_val, 3.0)
-                        home_shot = _normalize(home_shot_val, 18.0)
-                        home_poss = min(home_poss_val, 100.0)
-
-                        away_gol = _normalize(away_gol_val, 3.0)
-                        away_shot = _normalize(away_shot_val, 18.0)
-                        away_poss = min(away_poss_val, 100.0)
-
-                        categories = ["GOL GÜCÜ", "ŞUT TEHDİDİ", "TOP HAKİMİYETİ", "GOL GÜCÜ"]
-                        home_r = [home_gol, home_shot, home_poss, home_gol]
-                        away_r = [away_gol, away_shot, away_poss, away_gol]
-
-                        home_hover = [
-                            f"Ort. {home_gol_val:.1f} Gol",
-                            f"Ort. {home_shot_val:.1f} Şut",
-                            f"%{home_poss_val:.0f} Topla Oynama",
-                            f"Ort. {home_gol_val:.1f} Gol"
-                        ]
-                        away_hover = [
-                            f"Ort. {away_gol_val:.1f} Gol",
-                            f"Ort. {away_shot_val:.1f} Şut",
-                            f"%{away_poss_val:.0f} Topla Oynama",
-                            f"Ort. {away_gol_val:.1f} Gol"
-                        ]
-
-                        fig = go.Figure()
-                        fig.add_trace(go.Scatterpolar(
-                            r=home_r,
-                            theta=categories,
-                            fill='toself',
-                            name=selected_match_obj['home'],
-                            fillcolor='rgba(59, 130, 246, 0.4)',
-                            line=dict(color='#3b82f6'),
-                            hovertext=home_hover,
-                            hoverinfo="text"
-                        ))
-                        fig.add_trace(go.Scatterpolar(
-                            r=away_r,
-                            theta=categories,
-                            fill='toself',
-                            name=selected_match_obj['away'],
-                            fillcolor='rgba(239, 68, 68, 0.4)',
-                            line=dict(color='#ef4444'),
-                            hovertext=away_hover,
-                            hoverinfo="text"
-                        ))
-                        fig.update_layout(
-                            polar=dict(
-                                radialaxis=dict(visible=True, range=[0, 100], showticklabels=False),
-                                angularaxis=dict(tickfont=dict(size=14, color="white"))
-                            ),
-                            paper_bgcolor='rgba(0,0,0,0)',
-                            plot_bgcolor='rgba(0,0,0,0)',
-                            font=dict(color="white"),
-                            showlegend=True,
-                            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-                            margin=dict(t=30, b=30, l=30, r=30)
+                        ai_response = get_cached_analysis(
+                            selected_match_obj['home'], selected_match_obj['away'], selected_match_obj['url'],
+                            st.session_state.current_standings, league_stats_data
                         )
-
-                        st.plotly_chart(fig, use_container_width=True)
-                        # --- YENİ KART TASARIMI (GLASSMORPHISM) ---
-                        st.markdown("### 🎯 HIZLI BAKIŞ")
-                        c1, c2, c3, c4 = st.columns(4)
-                        with c1: st.markdown(f"<div class='metric-card card-green'><div class='metric-label'>🔥 ANA TERCİH</div><div class='metric-value'>{ai_response.get('ana_tercih', '-')}</div></div>", unsafe_allow_html=True)
-                        with c2: st.markdown(f"<div class='metric-card card-blue'><div class='metric-label'>🛡️ GÜVEN</div><div class='metric-value'>{ai_response.get('guven_skoru', '-')}</div></div>", unsafe_allow_html=True)
-                        with c3: st.markdown(f"<div class='metric-card card-yellow'><div class='metric-label'>🎲 SÜRPRİZ</div><div class='metric-value'>{ai_response.get('surpriz_tercih', '-')}</div></div>", unsafe_allow_html=True)
-                        with c4: st.markdown(f"<div class='metric-card card-purple'><div class='metric-label'>⭐ YILDIZ</div><div class='metric-value'>{ai_response.get('macin_yildizi', '-')}</div></div>", unsafe_allow_html=True)
                         
-                        st.markdown("<br>", unsafe_allow_html=True)
-                        st.info(f"💡 **Kritik Faktör:** {ai_response.get('kritik_faktor', '')}")
-                        st.markdown("---")
-                        st.subheader("📝 Detaylı Analiz Raporu")
-                        st.markdown(ai_response.get('analiz_metni', ''))
-                    else:
-                        st.error("Analiz hatası.")
+                        if ai_response:
+                            match_name = f"{selected_match_obj['home']} - {selected_match_obj['away']}"
+                            data_manager.add_analysis(match_name, ai_response)
+                            st.session_state.current_analysis_context = ai_response
+                            st.session_state.current_analysis_match = {
+                                "home_team": selected_match_obj["home"],
+                                "away_team": selected_match_obj["away"]
+                            }
+                            
+                            # Grafik ve Kartlar
+                            st.markdown("### 🎯 HIZLI BAKIŞ")
+                            c1, c2, c3, c4 = st.columns(4)
+                            with c1: st.markdown(f"<div class='metric-card card-green'><div class='metric-label'>🔥 ANA TERCİH</div><div class='metric-value'>{ai_response.get('ana_tercih', '-')}</div></div>", unsafe_allow_html=True)
+                            with c2: st.markdown(f"<div class='metric-card card-blue'><div class='metric-label'>🛡️ GÜVEN</div><div class='metric-value'>{ai_response.get('guven_skoru', '-')}</div></div>", unsafe_allow_html=True)
+                            with c3: st.markdown(f"<div class='metric-card card-yellow'><div class='metric-label'>🎲 SÜRPRİZ</div><div class='metric-value'>{ai_response.get('surpriz_tercih', '-')}</div></div>", unsafe_allow_html=True)
+                            with c4: st.markdown(f"<div class='metric-card card-purple'><div class='metric-label'>⭐ YILDIZ</div><div class='metric-value'>{ai_response.get('macin_yildizi', '-')}</div></div>", unsafe_allow_html=True)
+                            
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            st.info(f"💡 **Kritik Faktör:** {ai_response.get('kritik_faktor', '')}")
+                            st.markdown("---")
+                            st.subheader("📝 Detaylı Analiz Raporu")
+                            st.markdown(ai_response.get('analiz_metni', ''))
+                        else:
+                            st.error("Analiz hatası.")
+                    finally:
+                        loader_placeholder.empty()
 
-    with t2:
-        st.subheader(f"📈 {selected_league_name} Detaylı Raporu")
-        if st.button("📊 Ligin Röntgenini Çek / Yenile", use_container_width=True):
-            with st.spinner("Taranıyor... Lütfen bekleyiniz."):
+        with sub_t2:
+            st.subheader("💬 Bağlama Duyarlı Maç Asistanı")
+            if not st.session_state.get("current_analysis_context"):
+                st.markdown("## 🔒")
+                st.info("Bu özelliği kullanmak için önce 'Analiz Masası'ndan bir maçı analiz etmelisiniz.")
+            else:
+                for msg in st.session_state.chat_history:
+                    with st.chat_message(msg["role"]):
+                        st.markdown(msg["content"])
+
+                user_question = st.chat_input("Maçla ilgili merak ettiğin nedir?")
+                if user_question:
+                    st.session_state.chat_history.append({"role": "user", "content": user_question})
+                    with st.chat_message("user"):
+                        st.markdown(user_question)
+
+                    context_data = {
+                        "home_team": st.session_state.current_analysis_match.get("home_team", "Ev Sahibi"),
+                        "away_team": st.session_state.current_analysis_match.get("away_team", "Deplasman"),
+                        "analysis": st.session_state.current_analysis_context
+                    }
+                    answer = ai_engine.get_chat_response(user_question, context_data)
+                    st.session_state.chat_history.append({"role": "assistant", "content": answer})
+                    with st.chat_message("assistant"):
+                        st.markdown(answer)
+
+        with sub_t3:
+            st.subheader(f"📈 Lig İstatistikleri")
+            if st.button("📊 Ligin Röntgenini Çek / Yenile", use_container_width=True):
+                loader_placeholder = show_full_page_loader("🛰️ Lig İstatistikleri Taranıyor...")
                 try:
-                    league_stats = scraper.get_league_detailed_stats(selected_league_value)
+                    league_stats = scraper.get_league_detailed_stats(st.session_state.leagues_map[st.session_state.sb_selected_league])
                     st.session_state.league_stats = league_stats
                     st.session_state.league_comment = ai_engine.analyze_league_overview(
-                        selected_league_name,
+                        st.session_state.sb_selected_league,
                         league_stats
                     )
                 except Exception as e:
                     st.error(f"Veri çekme hatası: {e}")
-        
-        if st.session_state.get("league_comment"):
-            st.markdown("### 🧠 Lig Özeti")
-            st.info(st.session_state.league_comment)
-
-        # --- YENİ TABLO TASARIMI (PANDAS + PROGRESS BAR) ---
-        if 'league_stats' in st.session_state:
-            raw_data = st.session_state.league_stats.get("team_stats", [])
+                finally:
+                    loader_placeholder.empty()
             
-            if raw_data:
-                parsed_data = []
-                for item in raw_data:
-                    try:
-                        parts = item.split("->")
-                        if len(parts) < 2: continue
-                        team = parts[0].strip()
-                        stats_part = parts[1]
-                        stats_dict = {"Takım": team}
-                        for stat in stats_part.split(","):
-                            if ":" in stat:
-                                k, v = stat.split(":")
-                                clean_v = v.strip().replace('%', '')
-                                try: stats_dict[k.strip()] = float(clean_v)
-                                except: stats_dict[k.strip()] = clean_v
-                        parsed_data.append(stats_dict)
-                    except: continue
-                
-                if parsed_data:
-                    df = pd.DataFrame(parsed_data)
-                    st.dataframe(
-                        df,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "Takım": st.column_config.TextColumn("Takım", width="medium"),
-                            "Gol/M": st.column_config.ProgressColumn("Gol Ort.", format="%.2f", min_value=0, max_value=3.5),
-                            "Şut/M": st.column_config.ProgressColumn("Şut Ort.", format="%.1f", min_value=0, max_value=20),
-                            "TSO": st.column_config.ProgressColumn("Topla Oynama %", format="%d%%", min_value=30, max_value=70)
-                        }
-                    )
-            else:
-                st.error("⚠️ Lig istatistikleri çekilemedi veya boş döndü.")
-                st.info("Olası Sebepler: Maçkolik sitesi yanıt vermiyor olabilir veya seçilen ligde istatistik sekmesi yoktur.")
-        else:
-            st.info("Henüz veri çekilmedi. Lig istatistiklerini görmek için butona basın.")
+            if st.session_state.get("league_comment"):
+                st.markdown("### 🧠 Lig Özeti")
+                st.info(st.session_state.league_comment)
 
-    with t3:
-        sub_tab1, sub_tab2 = st.tabs(["Kuponlarım", "Analizlerim"])
-        import re as _re
-        import html as _html
-
-        def _clean_text(value):
-            if value is None:
-                return ""
-            text = _html.unescape(str(value))
-            text = _re.sub(r"<[^>]+>", "", text)
-            return text.strip()
-
-        with sub_tab1:
-            coupons = data_manager.get_user_coupons()
-            if coupons:
-                for coupon in coupons:
-                    title = f"{coupon.get('date', 'Tarih Yok')} • Toplam Oran: {coupon.get('total_odd', '-')}"
-                    with st.expander(title):
-                        items = coupon.get("items", [])
-                        if isinstance(items, str):
-                            try:
-                                import json as _json
-                                items = _json.loads(items)
-                            except Exception:
-                                items = []
-                        if isinstance(items, dict):
-                            items = [items]
-
-                        if items:
-                            coupon_text = "🔥 AKIL HOCASI KUPONU 🔥\n\n"
-                            total_odd = 1.0
-                            for idx, pick in enumerate(items, start=1):
-                                match = _clean_text(pick.get("mac", "-"))
-                                prediction = _clean_text(pick.get("tahmin", "-"))
-                                confidence = _clean_text(pick.get("guven", ""))
-                                odd_val = _clean_text(pick.get("oran_tahmini", "-"))
-                                reason = _clean_text(pick.get("neden", ""))
-
-                                st.markdown(f"**{idx}. {match}**")
-                                st.write(f"{prediction} {f'({confidence})' if confidence else ''} • Oran: {odd_val}")
-                                if reason:
-                                    st.caption(f"Neden: {reason}")
-                                st.markdown("---")
-                                
-                                coupon_text += f"⚽ {match}\n👉 {prediction} (Oran: {odd_val})\n\n"
-                                odd_num = _extract_odd_value(odd_val)
-                                if odd_num:
-                                    total_odd *= odd_num
-
-                            coupon_text += f"💰 Toplam Oran: {total_odd:.2f}"
-                            st.caption("👇 Metni kopyalayıp paylaşabilirsin:")
-                            st.code(coupon_text, language="text")
-
-                            img_bytes = create_coupon_image(items, f"{total_odd:.2f}")
-                            st.download_button(
-                                label="📸 Resmi İndir",
-                                data=img_bytes,
-                                file_name=f"akil_hocasi_kupon_{coupon.get('id', 'hist')}.png",
-                                mime="image/png",
-                                use_container_width=True,
-                                key=f"hist_btn_{coupon.get('id', idx)}"
-                            )
-                        else:
-                            st.info("Kupon detayları bulunamadı.")
-            else:
-                st.info("Henüz kayıt bulunamadı")
-
-        with sub_tab2:
-            analyses = data_manager.get_user_analyses()
-            if analyses:
-                for analysis in analyses:
-                    title = f"{analysis.get('match', 'Maç')} • {analysis.get('date', '')}".strip(" •")
-                    with st.expander(title):
-                        summary = analysis.get("summary", {})
-                        if isinstance(summary, str):
-                            try:
-                                import json as _json
-                                summary = _json.loads(summary)
-                            except Exception:
-                                summary = _clean_text(summary)
-
-                        if isinstance(summary, dict):
-                            st.markdown(f"**Ana Tercih:** {_clean_text(summary.get('ana_tercih', '-'))}")
-                            st.markdown(f"**Güven:** {_clean_text(summary.get('guven_skoru', '-'))}")
-                            st.markdown(f"**Sürpriz:** {_clean_text(summary.get('surpriz_tercih', '-'))}")
-                            st.markdown(f"**Maçın Yıldızı:** {_clean_text(summary.get('macin_yildizi', '-'))}")
-                            critical = _clean_text(summary.get("kritik_faktor", ""))
-                            if critical:
-                                st.info(f"💡 Kritik Faktör: {critical}")
-                            analysis_text = _clean_text(summary.get("analiz_metni", ""))
-                            if analysis_text:
-                                st.markdown("**Detaylı Analiz:**")
-                                st.write(analysis_text)
-                        else:
-                            st.write(_clean_text(summary))
-            else:
-                st.info("Henüz kayıt bulunamadı")
-
-else:
-    POPULAR_LEAGUES = [
-        {"name": "TÜRKİYE Süper Lig", "image": "https://upload.wikimedia.org/wikipedia/tr/9/94/S%C3%BCper_Lig_logo.png"},
-        {"name": "İNGİLTERE Premier Lig", "image": "https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg"},
-        {"name": "İSPANYA LaLiga", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/1200px-LaLiga_logo_2023.svg.png"},
-        {"name": "ALMANYA Bundesliga", "image": "https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg"},
-        {"name": "İTALYA Serie A", "image": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Serie_A_logo_2019.svg"},
-        {"name": "FRANSA Ligue 1", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Ligue_1_Uber_Eats_logo.svg/1200px-Ligue_1_Uber_Eats_logo.svg.png"}
-    ]
-
-    st.markdown("## 🏆 GÜNÜN FUTBOL MENÜSÜ")
-
-    if 'leagues_map' not in st.session_state or not st.session_state.leagues_map:
-        with st.spinner("Lig listesi yükleniyor..."):
-            st.session_state.leagues_map = scraper.get_leagues_list()
-
-    def _find_league_key(target_name, leagues_map):
-        target_upper = target_name.upper()
-        for key in leagues_map.keys():
-            key_upper = key.upper()
-            if target_upper in key_upper or key_upper in target_upper:
-                return key
-        return None
-
-    cols = st.columns(3)
-    for idx, league in enumerate(POPULAR_LEAGUES):
-        col = cols[idx % 3]
-        with col:
-            st.markdown(
-                f"""
-                <div class="league-card">
-                    <img class="league-img" src="{league['image']}" />
-                    <div class="league-name">{league['name']}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            if st.button("Analiz Et 🚀", key=f"quick_{league['name']}"):
-                leagues_map = st.session_state.get("leagues_map", {})
-                league_key = _find_league_key(league["name"], leagues_map)
-                if league_key:
-                    st.session_state.pending_league_key = league_key
-                    league_val = leagues_map[league_key]
-                    with st.spinner("Veriler indiriliyor..."):
-                        data = scraper.get_fixture_and_standings(league_val)
-                        st.session_state.current_fixture = data["matches"]
-                        st.session_state.current_standings = data["standings"]
-                        league_stats = scraper.get_league_detailed_stats(league_val)
-                        st.session_state.league_stats = league_stats
-                        st.session_state.league_comment = ai_engine.analyze_league_overview(
-                            league_key,
-                            league_stats
+            if 'league_stats' in st.session_state:
+                raw_data = st.session_state.league_stats.get("team_stats", [])
+                if raw_data:
+                    parsed_data = []
+                    for item in raw_data:
+                        try:
+                            parts = item.split("->")
+                            if len(parts) < 2: continue
+                            team = parts[0].strip()
+                            stats_part = parts[1]
+                            stats_dict = {"Takım": team}
+                            for stat in stats_part.split(","):
+                                if ":" in stat:
+                                    k, v = stat.split(":")
+                                    clean_v = v.strip().replace('%', '')
+                                    try: stats_dict[k.strip()] = float(clean_v)
+                                    except: stats_dict[k.strip()] = clean_v
+                            parsed_data.append(stats_dict)
+                        except: continue
+                    
+                    if parsed_data:
+                        df = pd.DataFrame(parsed_data)
+                        st.dataframe(
+                            df,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "Takım": st.column_config.TextColumn("Takım", width="medium"),
+                                "Gol/M": st.column_config.ProgressColumn("Gol Ort.", format="%.2f", min_value=0, max_value=3.5),
+                                "Şut/M": st.column_config.ProgressColumn("Şut Ort.", format="%.1f", min_value=0, max_value=20),
+                                "TSO": st.column_config.ProgressColumn("Topla Oynama %", format="%d%%", min_value=30, max_value=70)
+                            }
                         )
-                    st.rerun()
+    
+    else:
+        # --- VERİ YOKSA LANDING PAGE (KARTLAR) GÖSTER ---
+        POPULAR_LEAGUES = [
+            {"name": "TÜRKİYE Süper Lig", "image": "https://upload.wikimedia.org/wikipedia/tr/9/94/S%C3%BCper_Lig_logo.png"},
+            {"name": "İNGİLTERE Premier Lig", "image": "https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg"},
+            {"name": "İSPANYA LaLiga", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/1200px-LaLiga_logo_2023.svg.png"},
+            {"name": "ALMANYA Bundesliga", "image": "https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg"},
+            {"name": "İTALYA Serie A", "image": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Serie_A_logo_2019.svg"},
+            {"name": "FRANSA Ligue 1", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Ligue_1_Uber_Eats_logo.svg/1200px-Ligue_1_Uber_Eats_logo.svg.png"}
+        ]
+
+        st.markdown("## 🏆 GÜNÜN FUTBOL MENÜSÜ")
+
+        if 'leagues_map' not in st.session_state or not st.session_state.leagues_map:
+            with st.spinner("Lig listesi yükleniyor..."):
+                st.session_state.leagues_map = scraper.get_leagues_list()
+
+        def _find_league_key(target_name, leagues_map):
+            target_upper = target_name.upper()
+            for key in leagues_map.keys():
+                key_upper = key.upper()
+                if target_upper in key_upper or key_upper in target_upper:
+                    return key
+            return None
+
+        cols = st.columns(3)
+        for idx, league in enumerate(POPULAR_LEAGUES):
+            col = cols[idx % 3]
+            with col:
+                st.markdown(
+                    f"""
+                    <div class="league-card">
+                        <img class="league-img" src="{league['image']}" />
+                        <div class="league-name">{league['name']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button("Analiz Et 🚀", key=f"quick_{league['name']}"):
+                    loader = show_full_page_loader(f"🚀 {league['name']} Verileri İşleniyor...")
+                    try:
+                        leagues_map = st.session_state.get("leagues_map", {})
+                        target_name = league["name"]
+                        league_key = None
+                        for k in leagues_map.keys():
+                            if target_name.lower() in k.lower() or k.lower() in target_name.lower():
+                                league_key = k
+                                break
+                        
+                        if league_key:
+                            st.session_state.pending_league_key = league_key
+                            st.session_state.sb_selected_league = league_key # Seçili ligi güncelle
+                            league_val = leagues_map[league_key]
+                            
+                            data = scraper.get_fixture_and_standings(league_val)
+                            st.session_state.current_fixture = data["matches"]
+                            st.session_state.current_standings = data["standings"]
+                            
+                            league_stats = scraper.get_league_detailed_stats(league_val)
+                            st.session_state.league_stats = league_stats
+                            st.session_state.league_comment = ai_engine.analyze_league_overview(
+                                league_key,
+                                league_stats
+                            )
+                            st.rerun()
+                        else:
+                            st.error("Seçilen lig bulunamadı.")
+                    except Exception as e:
+                        st.error(f"Bir hata oluştu: {e}")
+                    finally:
+                        loader.empty()
+
+# -------------------------
+# SEKME 2: SPOR TOTO
+# -------------------------
+with main_tab2:
+    st.markdown("## 🇹🇷 SPOR TOTO: Haftanın 15'lisi")
+    st.info("Bu modül, resmi Spor Toto listesindeki 15 maçı çeker ve yapay zeka ile ideal kolonu oluşturur.")
+    
+    if 'st_matches' not in st.session_state:
+        st.session_state.st_matches = []
+        
+    col_act, col_info = st.columns([1, 2])
+    
+    with col_act:
+        if st.button("📅 Bu Haftanın Listesini Getir", use_container_width=True):
+            loader = show_full_page_loader("Spor Toto Listesi Çekiliyor...")
+            try:
+                matches = asyncio.run(scraper.get_spor_toto_week_list())
+                if matches:
+                    st.session_state.st_matches = matches
+                    st.success("Liste başarıyla çekildi!")
                 else:
-                    st.error("Seçilen lig bulunamadı. Lütfen yan menüden deneyin.")
+                    st.error("Liste çekilemedi. Siteye erişim sorunu olabilir.")
+            except Exception as e:
+                st.error(f"Hata: {e}")
+            finally:
+                loader.empty()
+                
+    if st.session_state.st_matches:
+        st.dataframe(st.session_state.st_matches, use_container_width=True)
+        
+        if st.button("🧠 15 Maçlık AI Kolonu Oluştur", type="primary", use_container_width=True):
+            loader = show_full_page_loader("Yapay Zeka 15 Maçı Analiz Ediyor...")
+            try:
+                prediction = ai_engine.analyze_spor_toto_column(st.session_state.st_matches)
+                st.session_state.st_prediction = prediction
+            finally:
+                loader.empty()
+                
+        if 'st_prediction' in st.session_state and st.session_state.st_prediction:
+            st.markdown("### 🎫 Yapay Zeka: Toto + Banko Önerileri")
+            
+            results = st.session_state.st_prediction
+            if isinstance(results, list):
+                for item in results:
+                    # Toto Tahmini Rengi
+                    tahmin = str(item['tahmin'])
+                    color = "#3b82f6" # Mavi (1)
+                    if tahmin == '0': color = "#eab308" # Sarı (0)
+                    if tahmin == '2': color = "#ef4444" # Kırmızı (2)
+                    
+                    # Banko Tercihini Al
+                    import html as _html
+                    banko = _html.escape(item.get('banko_tercih', 'Analiz Ediliyor...'))
+                    # String çevrimi ve Escape işlemi (Hata önleyici)
+                    karsilasma = _html.escape(str(item.get('karsilasma', '')))
+                    neden = _html.escape(str(item.get('neden', '')))
+                    
+                    # HTML Kodunu Girintisiz (Sola Yaslı) Olarak Tanımlıyoruz
+                    card_html = f"""
+<div style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; border-left: 4px solid {color};">
+    <div style="flex: 2;">
+        <div style="font-weight:bold; color:white; font-size:14px;">{item['mac_no']}. {karsilasma}</div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{neden}</div>
+    </div>
+    <div style="flex: 1; display:flex; flex-direction:column; align-items:end; gap:4px;">
+        <span style="background:{color}; color:white; padding:2px 10px; border-radius:4px; font-weight:bold; font-size:12px; min-width: 30px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">{tahmin}</span>
+        <span style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px; white-space: nowrap;">🎯 {banko}</span>
+    </div>
+</div>
+"""
+                    st.markdown(card_html, unsafe_allow_html=True)
+            else:
+                st.error("AI yanıtı işlenemedi.")
+
+# -------------------------
+# SEKME 3: KUPON GEÇMİŞİ
+# -------------------------
+with main_tab3:
+    import re as _re
+    import html as _html
+    def _clean_text(value):
+        if value is None: return ""
+        text = _html.unescape(str(value))
+        text = _re.sub(r"<[^>]+>", "", text)
+        return text.strip()
+
+    st.subheader("🗂️ Analiz ve Kupon Arşivi")
+    ht1, ht2 = st.tabs(["Kuponlarım", "Maç Analizlerim"])
+    
+    with ht1:
+        coupons = data_manager.get_user_coupons()
+        if coupons:
+            for coupon in coupons:
+                title = f"{coupon.get('date', 'Tarih Yok')} • Toplam Oran: {coupon.get('total_odd', '-')}"
+                with st.expander(title):
+                    items = coupon.get("items", [])
+                    if isinstance(items, str):
+                        try:
+                            import json as _json
+                            items = _json.loads(items)
+                        except: items = []
+                    if isinstance(items, dict): items = [items]
+
+                    if items:
+                        coupon_text = "🔥 AKIL HOCASI KUPONU 🔥\n\n"
+                        total_odd = 1.0
+                        for idx, pick in enumerate(items, start=1):
+                            match = _clean_text(pick.get("mac", "-"))
+                            prediction = _clean_text(pick.get("tahmin", "-"))
+                            confidence = _clean_text(pick.get("guven", ""))
+                            odd_val = _clean_text(pick.get("oran_tahmini", "-"))
+                            reason = _clean_text(pick.get("neden", ""))
+
+                            st.markdown(f"**{idx}. {match}**")
+                            st.write(f"{prediction} {f'({confidence})' if confidence else ''} • Oran: {odd_val}")
+                            if reason: st.caption(f"Neden: {reason}")
+                            st.markdown("---")
+                            
+                            coupon_text += f"⚽ {match}\n👉 {prediction} (Oran: {odd_val})\n\n"
+                            odd_num = _extract_odd_value(odd_val)
+                            if odd_num: total_odd *= odd_num
+
+                        coupon_text += f"💰 Toplam Oran: {total_odd:.2f}"
+                        st.code(coupon_text, language="text")
+
+                        img_bytes = create_coupon_image(items, f"{total_odd:.2f}")
+                        st.download_button(
+                            label="📸 İndir",
+                            data=img_bytes,
+                            file_name=f"kupon_{coupon.get('id', idx)}.png",
+                            mime="image/png",
+                            use_container_width=True,
+                            key=f"hist_btn_new_{coupon.get('id', idx)}"
+                        )
+        else:
+            st.info("Henüz kayıtlı kupon yok.")
+
+    with ht2:
+        analyses = data_manager.get_user_analyses()
+        if analyses:
+            for analysis in analyses:
+                title = f"{analysis.get('match', 'Maç')} • {analysis.get('date', '')}".strip(" •")
+                with st.expander(title):
+                    summary = analysis.get("summary", {})
+                    if isinstance(summary, str):
+                        try:
+                            import json as _json
+                            summary = _json.loads(summary)
+                        except: summary = _clean_text(summary)
+
+                    if isinstance(summary, dict):
+                        st.markdown(f"**Ana Tercih:** {_clean_text(summary.get('ana_tercih', '-'))}")
+                        st.markdown(f"**Güven:** {_clean_text(summary.get('guven_skoru', '-'))}")
+                        st.markdown("**Detaylı Analiz:**")
+                        st.write(_clean_text(summary.get("analiz_metni", "")))
+                    else:
+                        st.write(_clean_text(summary))
+        else:
+            st.info("Henüz kayıtlı analiz yok.")

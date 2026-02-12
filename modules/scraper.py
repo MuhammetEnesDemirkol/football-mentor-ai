@@ -1,10 +1,119 @@
 import time
 import re
+from difflib import SequenceMatcher
 from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 
 # Başlangıç noktası
 BASE_URL = "https://arsiv.mackolik.com/Puan-Durumu/s=70381/Turkiye-Super-Lig"
+
+# İddaa lig ID sözlüğü
+IDDAA_LEAGUE_IDS = {
+    "UEFA": 8,
+    "Premier Lig": 1,
+    "Süper Lig": 2,
+    "LaLiga": 3,
+    "Serie A": 4,
+    "Bundesliga": 5,
+    "Ligue 1": 6,
+    "Şampiyonlar Ligi": 8,
+    "Avrupa Ligi": 18
+}
+
+def _normalize_team_name(text):
+    if not text:
+        return ""
+    cleaned = re.sub(r"[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]+", " ", text)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip().lower()
+    return cleaned
+
+def _similarity(a, b):
+    if not a or not b:
+        return 0.0
+    return SequenceMatcher(None, a, b).ratio()
+
+def _match_teams_in_text(home, away, text):
+    if not text:
+        return False
+    norm_text = _normalize_team_name(text)
+    home_norm = _normalize_team_name(home)
+    away_norm = _normalize_team_name(away)
+    if home_norm in norm_text and away_norm in norm_text:
+        return True
+    return _similarity(home_norm, norm_text) > 0.65 and _similarity(away_norm, norm_text) > 0.65
+
+async def get_real_odds_from_iddaa(match_name, league_id):
+    """
+    iddaa.com üzerinden gerçek oranları çeker.
+    Dönen veri örneği:
+    {
+        "match": "Ev - Dep",
+        "ms1": "1.85",
+        "msx": "3.40",
+        "ms2": "4.10",
+        "alt_2_5": "1.72",
+        "ust_2_5": "1.98"
+    }
+    """
+    if not match_name or not league_id:
+        return None
+
+    parts = re.split(r"\s*-\s*|\s+vs\s+|\s+v\s+", match_name, flags=re.IGNORECASE)
+    if len(parts) >= 2:
+        home_team = parts[0].strip()
+        away_team = parts[1].strip()
+    else:
+        home_team, away_team = match_name, ""
+
+    url = f"https://www.iddaa.com/program/futbol?league={league_id}"
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        try:
+            await page.goto(url, timeout=60000)
+            await page.wait_for_load_state("domcontentloaded")
+            await page.wait_for_timeout(1500)
+
+            soup = BeautifulSoup(await page.content(), "html.parser")
+            grouped_wrappers = soup.find_all("div", class_=lambda c: c and "grouped-wrapper" in c)
+            if not grouped_wrappers:
+                return None
+
+            for wrapper in grouped_wrappers:
+                wrapper_text = wrapper.get_text(" ", strip=True)
+                if not _match_teams_in_text(home_team, away_team, wrapper_text):
+                    continue
+
+                odd_buttons = wrapper.find_all("button", class_=lambda c: c and "o_all__fRvUM" in c)
+                odds = []
+                for btn in odd_buttons:
+                    odd_text = btn.get_text(strip=True)
+                    if re.search(r"\d+(?:[.,]\d+)?", odd_text):
+                        odds.append(odd_text.replace(",", "."))
+
+                if not odds:
+                    return None
+
+                odds_data = {"match": f"{home_team} - {away_team}"}
+                if len(odds) >= 3:
+                    odds_data.update({
+                        "ms1": odds[0],
+                        "msx": odds[1],
+                        "ms2": odds[2]
+                    })
+                if len(odds) >= 5:
+                    odds_data.update({
+                        "alt_2_5": odds[3],
+                        "ust_2_5": odds[4]
+                    })
+                return odds_data
+
+            return None
+        except Exception:
+            return None
+        finally:
+            await browser.close()
 
 def handle_cookie_consent(page):
     """Cookie pencerelerini ve reklam overlay'lerini temizler."""
@@ -246,3 +355,98 @@ def get_league_detailed_stats(league_value):
             return {"team_stats": team_stats_list}
         except: return {"team_stats": []}
         finally: browser.close()
+
+async def get_spor_toto_week_list():
+    """
+    iddaa.com üzerinden güncel Spor Toto listesini çeker.
+    HTML yapısı 'data-comp-name' özniteliklerine göre hedeflenir.
+    """
+    url = "https://www.iddaa.com/spor-toto"
+    matches = []
+    
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            # Mobil görünüm değil desktop görünümü zorlayalım, yapı değişmesin
+            page = await browser.new_page(viewport={"width": 1280, "height": 800})
+            
+            try:
+                await page.goto(url, timeout=30000, wait_until="domcontentloaded")
+                
+                # 1. Listenin yüklenmesini bekle (1. maçın sıra numarası kutusu gelene kadar)
+                # HTML'de: <div ... data-comp-name="sporToto-1">1</div>
+                await page.wait_for_selector('div[data-comp-name="sporToto-1"]', timeout=20000)
+                
+            except Exception as e:
+                print(f"Sayfa yükleme zaman aşımı: {e}")
+                await browser.close()
+                return []
+
+            # 2. 15 Maçlık Döngü
+            for i in range(1, 16):
+                try:
+                    # Sıra numarasına sahip div'i bul (Örn: sporToto-1)
+                    # first=True kullanıyoruz çünkü bazen shadow dom veya duplicate olabilir, ilki işimizi görür.
+                    row_index_locator = page.locator(f'div[data-comp-name="sporToto-{i}"]').first
+                    
+                    # Eğer element yoksa döngüden çık
+                    if await row_index_locator.count() == 0:
+                        break
+                        
+                    # 3. Satırın Yapısını Çözümle
+                    # İlgili numaranın bir üst ebeveyni (parent) tüm satırı kapsayan flex container'dır.
+                    row_locator = row_index_locator.locator("..")
+                    
+                    # Tarih: data-comp-name="sporToto-dates"
+                    date_text = await row_locator.locator('div[data-comp-name="sporToto-dates"]').inner_text()
+                    
+                    # Takımlar: class="flex-1" olan div genellikle takımları içerir
+                    # Veya data-comp-name'i "sporToto-" ile başlayan ama tarih veya index olmayan div
+                    teams_locator = row_locator.locator('div.flex-1')
+                    teams_text = await teams_locator.inner_text()
+                    
+                    # Takım isimlerini ayrıştır (Format: Ev Sahibi-Deplasman)
+                    # Bazen takım adlarında tire (-) olabilir, bu yüzden basit split yerine dikkatli ayıralım.
+                    # iddaa.com genellikle "TakımA-TakımB" formatı kullanır (boşluksuz veya bitişik tire).
+                    if "-" in teams_text:
+                        # İlk tireden bölmek genelde güvenlidir ama takım adında tire varsa sorun olabilir.
+                        # Genellikle iddaa.com görünümlerinde tirenin etrafında boşluk olmayabiliyor.
+                        # En sağlam yöntem: ortadaki tireyi bulmak.
+                        parts = teams_text.split("-")
+                        if len(parts) >= 2:
+                            # Son parça deplasman, geri kalan her şey ev sahibi (örn: Demir-Çelik Spor - Vefa)
+                            # Ancak iddaa formatı genelde "X-Y" şeklindedir.
+                            # Basitçe 2'ye bölelim, çoğu durumda çalışır.
+                            # Alternatif: "Trabzonspor A.Ş.-Fenerbahçe A.Ş." gibi durumlarda
+                            # parts = ['Trabzonspor A.Ş.', 'Fenerbahçe A.Ş.'] -> OK.
+                            
+                            # Eğer 2'den fazla parça varsa (Örn: Hatay-Spor - İst-Spor) manuel birleştirme gerekebilir.
+                            # Şimdilik iddaa.com yapısına güvenip ilk parçayı Ev, diğerlerini Deplasman alalım.
+                            # Veya daha güvenlisi: ortadaki ayırıcıyı bulmak zor. 
+                            # Standart yaklaşım:
+                            home = parts[0].strip()
+                            away = "-".join(parts[1:]).strip()
+                        else:
+                            home = teams_text
+                            away = "?"
+                    else:
+                        home = teams_text
+                        away = "?"
+
+                    matches.append({
+                        "mac_no": i,
+                        "home": home,
+                        "away": away,
+                        "date": date_text
+                    })
+                    
+                except Exception as loop_e:
+                    print(f"Satır {i} işlenirken hata: {loop_e}")
+                    continue
+
+            await browser.close()
+            return matches
+
+    except Exception as e:
+        print(f"Genel Scraping Hatası: {e}")
+        return []
