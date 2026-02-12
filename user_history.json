@@ -1,0 +1,42 @@
+{
+    "coupons": [
+        {
+            "id": 1770857461,
+            "date": "12.02.2026 03:51",
+            "type": "coupon",
+            "total_odd": "6.17",
+            "items": [
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "MS 1",
+                    "oran_tahmini": "1.90",
+                    "guven": "%80",
+                    "neden": "Gençlerbirliği evinde son beş Süper Lig maçını kaybetmedi (4G 1B). Çaykur Rizespor ise deplasmanda çıktığı son altı Süper Lig maçını kazanamadı (4B 2M). Ev sahibi avantajı ve güncel form durumu oldukça belirleyici."
+                },
+                {
+                    "mac": "Alanyaspor - Konyaspor",
+                    "tahmin": "MS X",
+                    "oran_tahmini": "3.25",
+                    "guven": "%85",
+                    "neden": "Alanyaspor bu sezon Süper Lig'de %52 oranıyla (11/21) en fazla maçı eşitlikle sonuçlanan takım. Konyaspor ise ligdeki son 11 maçını kazanamayan (6B 5M) ve bu serinin önemli bir kısmında berabere kalan bir ekip. İki takımın da beraberliğe yüksek yatkınlığı dikkat çekiyor."
+                }
+            ]
+        }
+    ],
+    "analyses": [
+        {
+            "id": 1770857619,
+            "date": "12.02.2026 03:53",
+            "type": "analysis",
+            "match": "Göztepe - Kayserispor",
+            "summary": {
+                "ana_tercih": "Ev Sahibi Gol Yemez",
+                "guven_skoru": "%88",
+                "surpriz_tercih": "İlk Yarı 0",
+                "macin_yildizi": "Juan (Göztepe)",
+                "kritik_faktor": "Göztepe'nin Avrupa seviyesindeki savunma performansı ve Kayserispor'un gol yollarındaki çaresizliği, maçın skorunu doğrudan etkileyecektir.",
+                "analiz_metni": "Göztepe, evinde son üç Süper Lig maçını kazanmış ve Kayserispor'a karşı ligdeki tüm galibiyetlerini iç sahada almış güçlü bir ekip görüntüsünde. En önemlisi, bu sezon Avrupa'nın büyük liglerinde Porto'nun ardından en yüksek gole kapama yüzdesine (%57) sahip olması, savunma gücünün altını çiziyor. Göztepe, 1973/74'ten bu yana en fazla maçta gol yemediği sezonu yaşıyor ve ilk yarılarda sadece 4 gol yiyerek bu alanda ligin en iyisi. Öte yandan Kayserispor ise deplasmanda oynadığı son 15 lig maçının sadece birini kazanabilmiş, üst üste dört Süper Lig mağlubiyeti yaşamış ve 2026 senesinde henüz puanla tanışamamış, hücumda son derece etkisiz bir durumda. İlk yarılarda attığı sadece 2 golle bu alanda ligin en kötüsü olması, Göztepe'nin savunma hattı karşısında işlerinin çok zor olacağının göstergesi. Göztepe'nin gol katkısı yaptığı yedi maçın tamamını kazanan yıldız oyuncusu Juan da ev sahibinin galibiyet motivasyonunu artıracaktır. Tüm bu veriler ışığında, Göztepe'nin kalesini gole kapatarak galibiyete uzanma ihtimali oldukça yüksek görünmektedir."
+            }
+        }
+    ]
+}
