@@ -1,6 +1,321 @@
 {
     "coupons": [
         {
+            "id": 1770865950,
+            "date": "12.02.2026 06:12",
+            "type": "coupon",
+            "total_odd": "4.91",
+            "items": [
+                {
+                    "mac": "Antalyaspor - Samsunspor",
+                    "tahmin": "2.5 Alt",
+                    "oran_tahmini": "1.70",
+                    "guven": "%75",
+                    "neden": "Samsunspor'un deplasmandaki tek galibiyeti 1-0'lık skorla geldi ve ligde beraberliklere yatkın bir takım. Antalyaspor da kazandığı maçları tek farklı skorla alıyor. Maçın kilitli geçmesi bekleniyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "2.5 Alt",
+                    "oran_tahmini": "1.65",
+                    "guven": "%80",
+                    "neden": "Çaykur Rizespor, sezonun ilk yarısında Gençlerbirliği'ni 1-0 mağlup etti. Her iki takımın da son fikstürlerinde az gollü ve kilitlenmeye aday maçlar bulunuyor. Rizespor'un deplasman performansı da düşük skorları destekliyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Alanyaspor - Konyaspor",
+                    "tahmin": "2.5 Alt",
+                    "oran_tahmini": "1.75",
+                    "guven": "%85",
+                    "neden": "Alanyaspor ligin en fazla beraberlik alan takımı (%52). Konyaspor ise uzun süredir kazanamıyor ve beraberliklere oldukça yatkın. Bu maç, stratejiniz için en uygun düşük skor potansiyeli taşıyan karşılaşmalardan biri.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770865565,
+            "date": "12.02.2026 06:06",
+            "type": "coupon",
+            "total_odd": "2.45",
+            "items": [
+                {
+                    "mac": "Werder Bremen vs Bayern Münih",
+                    "tahmin": "MS 2",
+                    "oran_tahmini": "1.28",
+                    "guven": "%95",
+                    "neden": "Bayern Münih deplasmanda 10 maçtır kaybetmiyor ve çok dominant bir takım. Werder Bremen ise evinde 5, toplamda 11 maçtır kazanamıyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Nottingham Forest vs Liverpool",
+                    "tahmin": "MS 2",
+                    "oran_tahmini": "1.32",
+                    "guven": "%95",
+                    "neden": "Liverpool açık ara favori konumunda. Nottingham Forest evinde 5, toplamda 3 maçtır kazanamama serisine sahip ve üst üste 3 maçtır berabere kalıyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Augsburg vs Heidenheim",
+                    "tahmin": "MS 1",
+                    "oran_tahmini": "1.45",
+                    "guven": "%95",
+                    "neden": "Augsburg evinde 6 maçtır kaybetmiyor ve güçlü bir seri yakaladı. Heidenheim ise deplasmanda 4, toplamda 8 maçtır kazanamıyor ve son 3 maçını kaybetti.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770862962,
+            "date": "12.02.2026 05:22",
+            "type": "coupon",
+            "total_odd": "5.67",
+            "items": [
+                {
+                    "mac": "Galatasaray - Eyüpspor",
+                    "tahmin": "Toplam Goller 2.5 Üst",
+                    "oran_tahmini": "1.58",
+                    "guven": "%90",
+                    "neden": "Galatasaray bu sezon maçlarının %62'sinde 3+ gol attı ve tüm iç saha galibiyetlerinde en az üç gol kaydetti. Eyüpspor ise son dört maçında hücum performansını önemli ölçüde artırarak 7 gol buldu. Bu veriler gol potansiyeli yüksek bir maça işaret ediyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "MS 1",
+                    "oran_tahmini": "2.05",
+                    "guven": "%88",
+                    "neden": "Gençlerbirliği evinde oynadığı son beş Süper Lig maçını kaybetmedi (4G 1B). Çaykur Rizespor ise deplasmanda çıktığı son altı Süper Lig maçını kazanamadı (4B 2M) ve ligde bu sezon en düşük puan topladığı sezonlardan birini yaşıyor. Ev sahibi avantajı ve form durumu Gençlerbirliği galibiyetini destekliyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Alanyaspor - Konyaspor",
+                    "tahmin": "Alanyaspor Takım Golü 1.5 Üst",
+                    "oran_tahmini": "1.75",
+                    "guven": "%87",
+                    "neden": "Konyaspor, Süper Lig deplasmanlarındaki son 20 maçının tamamında gol yedi; bu, kulüp tarihindeki en uzun serilerden biri. Alanyaspor ise Konyaspor'a karşı son dört Süper Lig maçını kazandı ve evinde üst üste üç mağlubiyet yaşamadı. Konyaspor'un deplasman savunma zaafiyeti, Alanyaspor'un en az iki gol atmasını oldukça olası kılıyor.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770862665,
+            "date": "12.02.2026 05:17",
+            "type": "coupon",
+            "total_odd": "5.05",
+            "items": [
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "MS 1",
+                    "oran_tahmini": "1.80",
+                    "guven": "%88",
+                    "neden": "Ev sahibi Gençlerbirliği, evinde oynadığı son 5 Süper Lig maçını kaybetmedi (4G 1B). Rakibi Çaykur Rizespor ise deplasmanda çıktığı son 6 Süper Lig maçını kazanamadı (4B 2M). Bu durum, Gençlerbirliği galibiyetini güçlü bir şekilde destekliyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Antalyaspor - Samsunspor",
+                    "tahmin": "Toplam Goller 2.5 Alt",
+                    "oran_tahmini": "1.70",
+                    "guven": "%85",
+                    "neden": "Samsunspor'un son 9 maçının sadece birini kazanması ve bu galibiyetin 1-0 deplasman skoruyla gelmesi, Antalyaspor'un ise kazandığı 5 maçın tamamını tek farklı skorla alması düşük gollü bir maça işaret ediyor.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Trabzonspor - Fenerbahçe",
+                    "tahmin": "Karşılıklı Gol Var",
+                    "oran_tahmini": "1.65",
+                    "guven": "%80",
+                    "neden": "UYARI: Bu maçtaki bazı oyuncu (Talisca) ve teknik direktör (Domenico Tedesco) isimleri hatalıdır. Ancak, Fenerbahçe'nin ligdeki namağlup serisi ve deplasmandaki yenilmezliği ile Trabzonspor'un evindeki güçlü yenilmezlik serisi (10 maç), iki formda takımın derbide skor üretme potansiyelini artırıyor. Bu maç, veri tutarsızlığı nedeniyle riskli olarak işaretlenmiştir.",
+                    "uygunluk": "riskli"
+                }
+            ]
+        },
+        {
+            "id": 1770862068,
+            "date": "12.02.2026 05:07",
+            "type": "coupon",
+            "total_odd": "6.55",
+            "items": [
+                {
+                    "mac": "Galatasaray - Eyüpspor",
+                    "tahmin": "Toplam Gol 3.5 Üst",
+                    "oran_tahmini": "1.95",
+                    "guven": "%88",
+                    "neden": "Galatasaray bu sezon maçlarının %62'sinde 3+ gol atmış, iç sahada kazandığı tüm maçlarda en az üç gol bulmuş. Eyüpspor da son dönemde gol yollarında belirgin bir gelişim gösterdi.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Trabzonspor - Fenerbahçe",
+                    "tahmin": "Karşılıklı Gol Var",
+                    "oran_tahmini": "1.60",
+                    "guven": "%85",
+                    "neden": "Fenerbahçe deplasmanda namağlup ve kazandığı tüm dış saha maçlarında 2+ gol atmış. Trabzonspor da evinde oynadığı son 10 Süper Lig maçında yenilgi yüzü görmedi ve etkili bir hücum hattına sahip.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "Maç Sonucu 1",
+                    "oran_tahmini": "2.10",
+                    "guven": "%80",
+                    "neden": "Gençlerbirliği evinde oynadığı son beş Süper Lig maçını kaybetmedi (4G 1B) ve seyircisi önünde güçlü bir performans sergiliyor. Çaykur Rizespor ise deplasmanda çıktığı son altı maçta galibiyet alamadı (4B 2M) ve genel puan durumu düşük seyrediyor.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770861604,
+            "date": "12.02.2026 05:00",
+            "type": "coupon",
+            "total_odd": "5.64",
+            "items": [
+                {
+                    "mac": "Galatasaray - Eyüpspor",
+                    "tahmin": "Toplam Gol 3.5 Üst",
+                    "oran_tahmini": "1.90",
+                    "guven": "%88",
+                    "neden": "Galatasaray evinde kazandığı sekiz maçın tamamında en az üç gol attı. Eyüpspor ise son dört Süper Lig maçında yedi gol atarak (1.8 ortalama) gol yollarında belirgin bir gelişim gösterdi ve son fikstürleri gollü geçti.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Trabzonspor - Fenerbahçe",
+                    "tahmin": "Karşılıklı Gol Var",
+                    "oran_tahmini": "1.65",
+                    "guven": "%85",
+                    "neden": "Derbi atmosferinde iki takım da yüksek form grafiğine sahip. Trabzonspor evinde namağlup ve Paul Onuachu ile golcü bir yapıya sahipken, Fenerbahçe ligde namağlup ve deplasman maçlarında 2+ gol attığında galip geliyor. İki takımın da son fikstürleri gollü geçme eğiliminde.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Gençlerbirliği - Çaykur Rizespor",
+                    "tahmin": "Maç Sonucu 1",
+                    "oran_tahmini": "1.80",
+                    "guven": "%80",
+                    "neden": "Gençlerbirliği evinde oynadığı son beş Süper Lig maçını kaybetmedi (4G 1B) ve seyircisi önünde uzun bir yenilmezlik serisi yakaladı. Çaykur Rizespor ise deplasmanda çıktığı son altı Süper Lig maçını kazanamadı (4B 2M) ve puan ortalaması düşüktü. Gençlerbirliği'nin Rizespor'a karşı evindeki beraberlik serisi olmaması da bu tahmini destekliyor.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770861473,
+            "date": "12.02.2026 04:57",
+            "type": "coupon",
+            "total_odd": "2.44",
+            "items": [
+                {
+                    "mac": "Pisa - Milan",
+                    "tahmin": "Çifte Şans X2 (Milan Kaybetmez)",
+                    "oran_tahmini": "1.20",
+                    "guven": "%95",
+                    "neden": "Milan deplasmanda 12, toplamda 22 maçtır kaybetmiyor. Pisa ise evinde 6, toplamda 13 maçtır kazanamıyor. Milan'ın puan kaybetmesi çok düşük bir ihtimal.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Como - Fiorentina",
+                    "tahmin": "Toplam Gol 1.5 Üst",
+                    "oran_tahmini": "1.40",
+                    "guven": "%88",
+                    "neden": "Her iki takımın da son 5 maçının 4'ü 1.5 gol barajını aşmış durumda. Taraf bahsi yerine gol bahsi daha güvenli bir seçenek.",
+                    "uygunluk": "tam_uyumlu"
+                },
+                {
+                    "mac": "Lazio - Atalanta",
+                    "tahmin": "Çifte Şans X2 (Atalanta Kaybetmez)",
+                    "oran_tahmini": "1.45",
+                    "guven": "%87",
+                    "neden": "Atalanta deplasmanda 4, toplamda 7 maçtır kaybetmiyor. Lazio da evinde iyi olsa da, Atalanta'nın istikrarlı formu puan almasını yüksek ihtimal kılıyor.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770858985,
+            "date": "12.02.2026 04:16",
+            "type": "coupon",
+            "total_odd": "3.60",
+            "items": [
+                {
+                    "mac": "Sion - Basel",
+                    "tahmin": "2.5 ALT",
+                    "oran_tahmini": "1.80",
+                    "guven": "%65",
+                    "neden": "Sion evinde savunmada güçlü ve son maçlarında az gol yiyor. Ancak Basel'in deplasman performansı ve genelde yüksek skorlu maçları bu tahmini riskli hale getiriyor.",
+                    "uygunluk": "riskli"
+                },
+                {
+                    "mac": "Thun - Lausanne Sports",
+                    "tahmin": "2.5 ALT",
+                    "oran_tahmini": "2.00",
+                    "guven": "%55",
+                    "neden": "UYARI: Bu maç stratejinize ters (Thun çok golcü bir takım ve maçları yüksek skorlu bitiyor) ancak maç sayısını tamamlamak için eklendi.",
+                    "uygunluk": "riskli"
+                }
+            ]
+        },
+        {
+            "id": 1770858805,
+            "date": "12.02.2026 04:13",
+            "type": "coupon",
+            "total_odd": "1.30",
+            "items": [
+                {
+                    "mac": "Brentford - Arsenal",
+                    "tahmin": "MS X2 (Çifte Şans: Berabere veya Arsenal Kazanır)",
+                    "oran_tahmini": "1.30",
+                    "guven": "%90",
+                    "neden": "Arsenal'ın Brentford'a karşı genel üstünlüğü (son 8 maçta yenilgi yok), deplasmanda Londra takımlarına karşı sergilediği muazzam performans (20 maçta sadece 1 mağlubiyet) ve Brentford'un formundaki dalgalanmalar göz önüne alındığında, Arsenal'ın bu maçtan puanla ayrılması en garanti tercihtir. Banko kupon stratejisine en uygun, en düşük riskli seçenektir.",
+                    "uygunluk": "tam_uyumlu"
+                }
+            ]
+        },
+        {
+            "id": 1770858452,
+            "date": "12.02.2026 04:07",
+            "type": "coupon",
+            "total_odd": "3.44",
+            "items": [
+                {
+                    "mac": "Sion - Basel",
+                    "tahmin": "1X (Sion Kaybetmez)",
+                    "oran_tahmini": "1.35",
+                    "guven": "%90",
+                    "neden": "Sion evinde 7 maçtır kaybetmiyor ve toplamda 5 maçtır yenilmiyor. Basel deplasmanda iyi olsa da, Sion'un iç saha direnci bu tercihi çok güvenli kılıyor."
+                },
+                {
+                    "mac": "Thun - Lausanne Sports",
+                    "tahmin": "MS 1 (Thun Kazanır)",
+                    "oran_tahmini": "1.50",
+                    "guven": "%95",
+                    "neden": "Thun ligde 6 maçtır üst üste kazanıyor ve çok formda. Rakip Lausanne Sports ise 3 maçtır kazanamıyor. Thun bu maçın çok net favorisidir."
+                },
+                {
+                    "mac": "Brentford - Arsenal",
+                    "tahmin": "KG VAR (Karşılıklı Gol Var)",
+                    "oran_tahmini": "1.70",
+                    "guven": "%88",
+                    "neden": "Arsenal deplasmanda Brentford'a karşı üstün olsa da, Brentford'un forveti Igor Thiago iç sahada son 10 maçta 9 gol attı. Arsenal'in gol atma potansiyeli yüksekken, ev sahibinin de gol bulması muhtemeldir."
+                }
+            ]
+        },
+        {
+            "id": 1770858334,
+            "date": "12.02.2026 04:05",
+            "type": "coupon",
+            "total_odd": "2.48",
+            "items": [
+                {
+                    "mac": "Galatasaray - Eyüpspor",
+                    "tahmin": "Galatasaray 2.5 ÜST",
+                    "oran_tahmini": "1.60",
+                    "guven": "%92",
+                    "neden": "Galatasaray bu sezon iç sahada kazandığı tüm maçlarda (8/8) en az 3 gol attı. Eyüpspor'un İstanbul takımlarına karşı deplasman performansı zayıf."
+                },
+                {
+                    "mac": "Alanyaspor - Konyaspor",
+                    "tahmin": "Alanyaspor 1.5 ÜST",
+                    "oran_tahmini": "1.55",
+                    "guven": "%90",
+                    "neden": "Konyaspor, deplasmanda oynadığı son 20 Süper Lig maçının tamamında gol yedi. Alanyaspor ise rakibine karşı son dört lig maçını kazandı ve evinde üst üste üç mağlubiyet yaşamadı."
+                }
+            ]
+        },
+        {
             "id": 1770857461,
             "date": "12.02.2026 03:51",
             "type": "coupon",
@@ -24,6 +339,110 @@
         }
     ],
     "analyses": [
+        {
+            "id": 1770864782,
+            "date": "12.02.2026 05:53",
+            "type": "analysis",
+            "match": "Inter - Juventus",
+            "summary": {
+                "ana_tercih": "Ev Sahibi Toplam Goller 1.5 Üst",
+                "guven_skoru": "%90",
+                "surpriz_tercih": "Karşılıklı Gol Var",
+                "macin_yildizi": "Lautaro Martinez",
+                "kritik_faktor": "Inter'in kendi sahasındaki yenilmezlik serisi ve hücumdaki etkinliği, maçın sonucunu belirleyecek en önemli etken olacaktır.",
+                "analiz_metni": "Şubat 2026 itibarıyla ligin zirvesinde yer alan Inter, evinde 5 maçtır kaybetmeyerek ve toplamda 12 maçtır yenilgi yüzü görmeyerek kusursuz bir performans sergiliyor. Son 5 lig maçını da kazanmaları, takımın mevcut formunun ve özgüveninin ne denli yüksek olduğunu açıkça gösteriyor. Inter, maç başına 2.4 gol ortalaması ve %83'lük iç saha 1.5 gol üstü istatistiğiyle hücumda oldukça üretken. Ayrıca, iç saha maçlarının %75'i 2.5 gol üstü bitiyor ki bu da Inter'in gol yollarında ne kadar etkili olduğunu ortaya koyuyor. Juventus ise ligde toplamda 3 maçtır kaybetmese de, deplasmanda Inter kadar dominant bir gol grafiğine sahip değil. Maç başına 1.7 gol ortalamaları ve deplasman 2.5 gol üstü oranlarının %33 olması, Inter'e kıyasla daha kontrollü bir oyun tercih edebileceklerini işaret ediyor. Ancak, geçmiş derbi karşılaşmalarının genellikle gollü geçtiğini (örneğin 2024/2025 sezonundaki Inter 4-4 Juventus ve 2025/2026 sezonundaki Juventus 4-3 Inter maçları) göz önüne aldığımızda, Juventus'un Kenan Yıldız liderliğinde gol bulma potansiyeli bulunuyor. Inter'in kendi sahasındaki üstünlüğü ve Lautaro Martinez (14 gol) gibi golcüleriyle, bu karşılaşmada en az iki gol atmaları oldukça yüksek bir ihtimal olarak öne çıkıyor."
+            }
+        },
+        {
+            "id": 1770864429,
+            "date": "12.02.2026 05:47",
+            "type": "analysis",
+            "match": "Kocaelispor - Gaziantep FK",
+            "summary": {
+                "ana_tercih": "KG VAR (Karşılıklı Gol Var)",
+                "guven_skoru": "%85",
+                "surpriz_tercih": "Toplam Gol 2.5 ÜST",
+                "macin_yildizi": "Mohamed Bayo",
+                "kritik_faktor": "Kocaelispor'un duran toplardaki etkinliği ile Gaziantep FK'nın bu alandaki zafiyeti ve Mohamed Bayo'nun golcü kimliği.",
+                "analiz_metni": "Akıl Hocası'nın merceği altında, Kocaelispor ve Gaziantep FK arasındaki mücadele, karşılıklı gollerin yüksek olasılık taşıdığını fısıldıyor. Gaziantep FK, rakibi karşısında son üç resmi maçı kazanarak üstünlük kurmuş durumda ve bu sezonun ilk yarısında da 2-0'lık bir galibiyet elde etti. Kocaelispor'un evinde oynadığı son iki Süper Lig maçını kaybetmesi, ancak son maçta Kayserispor'u mağlup etmesi, dengeleri belirliyor. Ancak ev sahibi ekibin arka arkaya iki galibiyet serisi yakalamakta zorlanması dikkat çekiyor. Deplasman ekibi Gaziantep FK ise, dış sahada oynadığı son maçta yenilmesine rağmen, bu sezon üst üste iki kez aynı sonucu almayan bir grafik sergiliyor ve yeni yükselen takımlara karşı üst üste iki mağlubiyet yaşadığı son dönemin üzerinden uzun zaman geçti. Maçın en kritik detayı, Kocaelispor'un gollerinin %50'sini duran toplardan kaydetmesi ve Gaziantep FK'nın yediği gollerin %43'ünün bu şekilde gelmesi. Bu durum, Kocaelispor için net bir gol yolu sunuyor. Öte yandan, Gaziantep FK'nın daha yüksek gol ortalaması (1.4 Gol/M) ve formda golcüsü Mohamed Bayo'nun son dört maçtaki üç gol ve bir asistlik katkısı, deplasman ekibinin de gol bulacağına işaret ediyor. Bu veriler ışığında, her iki takımın da fileleri havalandırması yüksek ihtimal olarak öne çıkıyor."
+            }
+        },
+        {
+            "id": 1770864085,
+            "date": "12.02.2026 05:41",
+            "type": "analysis",
+            "match": "Brentford - Arsenal",
+            "summary": {
+                "ana_tercih": "KG VAR",
+                "guven_skoru": "%85",
+                "surpriz_tercih": "Deplasman 1.5 ÜST",
+                "macin_yildizi": "Igor Thiago",
+                "kritik_faktor": "Igor Thiago'nun evindeki golcülük performansı ve Arsenal'in son dönemdeki savunma zaafiyeti.",
+                "analiz_metni": "Şubat 2026 bağlamında, bu mücadele liderlik koltuğunda oturan Arsenal ile iç sahada gol yollarında etkili Brentford arasında geçecek. Arsenal, Premier Lig'deki zirve konumunu (56 Puan) koruma mücadelesi verirken, Brentford'a karşı son sekiz lig maçında mağlup olmaması ve özellikle bu deplasmandaki son üç karşılaşmayı yedi gol atıp sadece bir gol yiyerek kazanması, psikolojik üstünlüklerini gösteriyor. Londra takımlarına karşı deplasmanda sadece bir yenilgi alan topçular, bu derbilerdeki tecrübeleriyle öne çıkıyor.\n\nAncak maçın kritik denge noktası, Brentford'un santraforu Igor Thiago. Thiago, son 10 iç saha Premier Lig maçında dokuz gol atarak inanılmaz bir form grafiği çiziyor ve bu süreçte dört karşılaşmada ikişer gol sevinci yaşadı. Bu, Arsenal'in genel olarak güçlü savunma istatistiklerine rağmen, Brentford'un kendi evinde gol bulma potansiyelinin oldukça yüksek olduğuna işaret ediyor. Arsenal'in son fikstüründeki sonuçlar (1-4 galibiyet, 1-3 galibiyet, 2-3 mağlubiyet) da, galibiyet alsalar dahi zaman zaman gol yediklerini gösteriyor.\n\nArsenal'in ortalama 2.0 gol ve 10.6 şut/maç istatistikleri, Viktor Gyökeres'in liderliğindeki golcü kadrosuyla (8 gol) rakip kaleye ciddi bir tehdit oluşturacağını gösteriyor. Dolayısıyla, her iki takımın da gol bulması oldukça muhtemel görünüyor. Teknik verilerde Arsenal'in topa sahip olma (%57,20) ve korner (6,1) üstünlüğü, maç kontrolünün onlarda olacağını ancak Brentford'un hızlı hücumlarla Thiago'yu besleyerek yanıt verebileceğini düşündürüyor. Bu sebeple, 'Karşılıklı Gol Var' tercihi en yüksek olasılığa sahip görünmektedir."
+            }
+        },
+        {
+            "id": 1770863489,
+            "date": "12.02.2026 05:31",
+            "type": "analysis",
+            "match": "Kocaelispor - Gaziantep FK",
+            "summary": {
+                "ana_tercih": "Gaziantep FK Çifte Şans ve KG VAR",
+                "guven_skoru": "%85",
+                "surpriz_tercih": "Toplam Gol 3.5 ÜST",
+                "macin_yildizi": "Mohamed Bayo",
+                "kritik_faktor": "Gaziantep FK'nın tarihi üstünlüğü ve deplasman formundaki dönemsel istikrarı karşısında Kocaelispor'un duran toplardan gol bulma becerisi.",
+                "analiz_metni": "Kocaelispor ile Gaziantep FK arasındaki bu mücadele, her iki ekibin de son derece formda olması nedeniyle büyük çekişmeye sahne olacak. Gaziantep FK, rakibi Kocaelispor karşısında lig tarihinde mağlubiyet yüzü görmemiş olmanın ve son üç resmi maçı kazanmış olmanın verdiği psikolojik üstünlükle sahaya çıkacak. Deplasman formunda üst üste aynı sonucu almayan Gaziantep FK'nın, son deplasman mağlubiyetinin ardından bu maçtan puanla dönmesi bekleniyor. Kocaelispor'un evinde oynadığı son iki lig maçını kaybetmiş olması bir handikap olarak öne çıkarken, son 5 maçtaki 4 galibiyet ve 1 beraberliklik genel formu dikkat çekici. Aynı şekilde Gaziantep FK da son 5 maçından 4 galibiyet ve 1 beraberlikle ayrıldı. İki takımın da son maçlarda gol yollarında etkili olduğu göz önüne alındığında, filelerin karşılıklı havalanması yüksek olasılık. Özellikle Kocaelispor'un gollerinin %50'sini duran toplardan bulması ve Gaziantep FK'nın yediği gollerin %43'ünün duran toplardan gelmesi, ev sahibinin bu yolla gol bulabileceğine işaret ediyor. Gaziantep FK'nın golcü ismi Mohamed Bayo'nun formu ve Kocaelispor'da Daniel Agyei'nin geçen hafta attığı iki gol, karşılıklı gol beklentisini güçlendiriyor. Bu faktörler bir araya geldiğinde, Gaziantep FK'nın puansız ayrılmayacağı ancak Kocaelispor'un da golle karşılık vereceği bir maç öngörülüyor."
+            }
+        },
+        {
+            "id": 1770861080,
+            "date": "12.02.2026 04:51",
+            "type": "analysis",
+            "match": "Inter - Juventus",
+            "summary": {
+                "ana_tercih": "Ev Sahibi 1.5 ÜST",
+                "guven_skoru": "%85",
+                "surpriz_tercih": "Toplam Korner 10.5 ÜST",
+                "macin_yildizi": "Kenan Yıldız",
+                "kritik_faktor": "Inter'in keskin hücum hattının, Juventus'un disiplinli savunmasını ne ölçüde parçalayabileceği.",
+                "analiz_metni": "Bu kritik derbide Inter, evinde sergilediği mükemmel form grafiğiyle öne çıkıyor; ligde 5 maçtır kaybetmiyor, toplamda 5 maçtır kazanıyor ve 12 maçtır bileği bükülmüyor. Maç başına 2.4 gol ortalaması, 13.5 şut ve 6.8 korner istatistikleri, Inter'in sahada kurduğu dominant ve gol odaklı oyunu net bir şekilde gösteriyor. Juventus ise ligde 3 maçtır kaybetmeyerek formda olduğunu kanıtladı ve Kenan Yıldız gibi golcülerle rakip kaleye tehlike yaratma potansiyeline sahip. Ancak Inter'in evindeki yenilmezlik serisi ve hücumdaki üstünlüğü, maçın gidişatını belirleyecek ana faktör olacaktır. Inter'in bu formda iki gol atması yüksek olasılık taşırken, her iki takımın da ortalama korner sayıları (Inter 6.8, Juventus 5.4) düşünüldüğünde, maçın genelinde 10.5 korner barajının aşılması da sürpriz olmayacaktır."
+            }
+        },
+        {
+            "id": 1770861037,
+            "date": "12.02.2026 04:50",
+            "type": "analysis",
+            "match": "Pisa - Milan",
+            "summary": {
+                "ana_tercih": "Trafik Yoğun",
+                "analiz_metni": "Üzgünüm, Google API şu an aşırı yoğun. Lütfen 1 dakika sonra tekrar deneyiniz."
+            }
+        },
+        {
+            "id": 1770860857,
+            "date": "12.02.2026 04:47",
+            "type": "analysis",
+            "match": "Pisa - Milan",
+            "summary": {
+                "ana_tercih": "Trafik Yoğun",
+                "analiz_metni": "Üzgünüm, Google API şu an aşırı yoğun. Lütfen 1 dakika sonra tekrar deneyiniz."
+            }
+        },
+        {
+            "id": 1770860488,
+            "date": "12.02.2026 04:41",
+            "type": "analysis",
+            "match": "Antalyaspor - Samsunspor",
+            "summary": {
+                "ana_tercih": "Samsunspor İlk Yarı Gol Atar",
+                "guven_skoru": "%80",
+                "surpriz_tercih": "Maç Sonucu: Beraberlik",
+                "macin_yildizi": "Cherif Ndiaye",
+                "kritik_faktor": "Antalyaspor'un maçın ilk 15 dakikasındaki savunma zaafiyeti ve Samsunspor'un bu zaafı erken golle değerlendirme becerisi.",
+                "analiz_metni": "Antalyaspor, evinde aldığı son iki maçta 4 puanla iç saha performansını toparlasa da, Süper Lig tarihinde Samsunspor'a karşı üst üste üç galibiyet serisi yakalayamadı. Benzer şekilde, Samsunspor da Antalyaspor deplasmanında üst üste üç mağlubiyet almamış durumda. Bu tarihsel denge, maçın genel sonucuna dair bir belirsizlik yaratırken, verilerde çok daha güçlü ve spesifik bir trend öne çıkıyor: Antalyaspor, bu sezon Süper Lig'de maçların ilk 15 dakikasında en fazla gol yiyen takım (8 gol). Karşılarında ise Samsunspor, aynı zaman diliminde 5 golle ligin en çok gol atan ilk üç takımından biri. Bu çarpıcı istatistiksel eşleşme, Samsunspor'un maça erken bir golle başlaması için yüksek bir olasılık sunuyor. Ayrıca, Süper Lig kariyerinde Antalyaspor'a karşı en çok gol atan ve tek hat-trick'ini bu ekibe karşı yapan Cherif Ndiaye'nin varlığı, Samsunspor'un erken gol potansiyelini daha da artırıyor. Antalyaspor'da Sander van de Streek'in son üç iç saha maçında gol atma başarısı ev sahibinin de gol bulabileceğini işaret etse de, ilk yarıdaki erken gol eğilimi daha keskin bir tahmin sunmaktadır. Samsunspor'un bu sezonki yüksek beraberlik oranı ve iki takımın da üst üste galibiyet/mağlubiyet serisi yakalayamama eğilimi, maçın genel sonucunun bir beraberlikle bitebileceği sürpriz tercihi için zemin hazırlıyor. Teknik istatistiklerde Samsunspor'un ortalama gol, şut ve korner sayılarında Antalyaspor'a göre daha üretken olması da bu analizi desteklemektedir."
+            }
+        },
         {
             "id": 1770857619,
             "date": "12.02.2026 03:53",

@@ -99,7 +99,7 @@ def get_match_deep_stats(match_url):
     """
     Maç detaylarını (OPTA Facts, Son Form Durumu + TARİHLER, Kadrolar) çeker.
     """
-    stats = {"yellow_box": [], "player_stats": [], "h2h": []}
+    stats = {"yellow_box": [], "player_stats": [], "h2h": [], "comparison_stats": "", "form_patterns": []}
     
     print(f"🕵️‍♂️ Derin Analiz Başlıyor: {match_url}")
     
@@ -125,6 +125,25 @@ def get_match_deep_stats(match_url):
             yellows = soup.find_all("div", style=lambda v: v and '#FBFCC8' in v)
             for y in yellows: 
                 stats["yellow_box"].append(f"⚠️ {y.get_text(' ', strip=True)}")
+
+            # --- 1.5 OPTA / KARŞILAŞTIRMA VERİLERİ (compare-right-coll) ---
+            try:
+                compare_el = page.query_selector("#compare-right-coll")
+                if compare_el:
+                    compare_text = compare_el.inner_text().strip()
+                    compare_text = re.sub(r"\s+", " ", compare_text)
+                    stats["comparison_stats"] = compare_text
+
+                    # Form durumuna benzeyen dizileri yakala (G, B, M, W, D, L)
+                    form_patterns = re.findall(r"[GBMWDL]{3,}", compare_text)
+                    if form_patterns:
+                        stats["form_patterns"] = [p.strip() for p in form_patterns if p.strip()]
+                else:
+                    stats["comparison_stats"] = ""
+                    stats["form_patterns"] = []
+            except Exception:
+                stats["comparison_stats"] = ""
+                stats["form_patterns"] = []
 
             # --- 2. FORM DURUMU ve FİKSTÜR SIKIŞIKLIĞI (GÜNCELLENDİ) ---
             # Artık tarihleri de alıyoruz!

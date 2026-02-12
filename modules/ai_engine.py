@@ -137,7 +137,14 @@ def generate_smart_coupon(matches_data, match_count, bet_preference):
     # Stratejiye göre ek talimat belirle
     strategy_instruction = ""
     if "Banko" in bet_preference:
-        strategy_instruction = "Risk alma. Sadece 'Evinde X maçtır kazanıyor' gibi çok güçlü serileri olan, favorilerin kazanacağı veya Çifte Şans gibi garanti tercihleri seç."
+        strategy_instruction = """
+        KRİTİK KURAL: Asla sadece 'Maç Sonucu' (MS) bahsine odaklanma!
+        Hedefimiz en yüksek kazanma ihtimali (%85 ve üzeri).
+        - Eğer favori takım riskliyse ama gol bekleniyorsa '1.5 ÜST' veya 'KG VAR' öner.
+        - Eğer favori kaybetmez gibiyse ama kazanması garanti değilse 'Çifte Şans (1X veya X2)' öner.
+        - Sadece ve sadece galibiyet çok netse (Örn: Lider vs Sonuncu) 'MS' öner.
+        - Oran düşük olsa bile en 'Yeşil' (Güvenli) tercihi seç.
+        """
     elif "Gol Şov" in bet_preference:
         strategy_instruction = "Taraf bahsinden kaçın. İki takımın da golcü olduğu, savunmaların zayıf olduğu maçları seç. Hedef: KG VAR veya 2.5 ÜST."
     elif "Kısır" in bet_preference:
@@ -155,6 +162,12 @@ def generate_smart_coupon(matches_data, match_count, bet_preference):
     
     KULLANICI STRATEJİSİ: {bet_preference}
     ⚠️ BU STRATEJİ İÇİN ÖZEL TALİMAT: {strategy_instruction}
+
+    EK KURAL:
+    Eğer eldeki maçlardan biri, kullanıcının seçtiği stratejiye (Örn: Kısır Döngü/Alt) HİÇ UYMUYORSA ama sayı tamamlamak için eklemek zorundaysan;
+    Tahminini yine de yap (Stratejiye en yakın olanı).
+    JSON çıktısına "uygunluk": "riskli" alanını ekle (Normal maçlar için "tam_uyumlu" olsun).
+    "neden" alanına dürüstçe şunu yaz: 'UYARI: Bu maç stratejinize ters (Takımlar çok golcü) ancak maç sayısını tamamlamak için eklendi.'
     
     VERİLER:
     {matches_text}
@@ -166,7 +179,8 @@ def generate_smart_coupon(matches_data, match_count, bet_preference):
         "tahmin": "Tahmin (Örn: MS 1)",
         "oran_tahmini": "Tahmini Oran (Örn: 1.55)",
         "guven": "Güven Skoru (Örn: %85)",
-        "neden": "Kısa gerekçe (Örn: Ev sahibi son 5 maçını kazandı, rakip çok eksik)"
+        "neden": "Kısa gerekçe (Örn: Ev sahibi son 5 maçını kazandı, rakip çok eksik)",
+        "uygunluk": "riskli"
       }},
       ... (İstenen sayı kadar maç)
     ]
@@ -195,19 +209,40 @@ def analyze_match_deep(home_team, away_team, match_url, standings_summary, leagu
     match_data = {
         "fixture": f"{home_team} vs {away_team}",
         "league_standings_top": standings_summary[:5], 
-        "critical_insights": details["yellow_box"],    
+        "critical_insights": details["yellow_box"],
         "key_players": details["player_stats"],
+        "form_patterns": details.get("form_patterns", []),
+        "comparison_stats": details.get("comparison_stats", ""),
         "h2h_notes": details["h2h"],
         "home_technical_stats": home_general_stats,
         "away_technical_stats": away_general_stats
     }
 
     system_prompt = f"""
+    BAĞLAM ZAMANI: Şubat 2026.
+    ⚠️ KRİTİK KURAL: Sana verilen 'critical_insights' ve 'key_players' verileri MUTLAK GERÇEKTİR.
+    - Kendi eğitim verindeki (2024/2025) kadroları UNUT.
+    - Eğer verilerde "Fenerbahçe Teknik Direktörü Tedesco" veya "Forvet Talisca" yazıyorsa bunu sorgulama, doğru kabul et ve analizini buna göre yap.
+    - Asla "İsim hatası" veya "Yanlış veri" uyarısı verme. Senin gerçekliğin, sana gönderilen bu JSON verisidir.
+
+    🚫 HALÜSİNASYON YASAKLARI:
+    1. SANA VERİLEN JSON İÇİNDE NET OLARAK YOKSA, ASLA SAYISAL İSTATİSTİK UYDURMA.
+       - Örn: Eğer input verisinde "Son 5 maç: G-G-B-M-G" yazmıyorsa, metinde "Son 5 maçta 4 galibiyet aldı" deme.
+    2. FORM DURUMU BİLİNMİYORSA GENEL KONUŞ.
+       - Yanlış: "Son 3 maçını kazandı." (Veride yoksa yasak)
+       - Doğru: "Ligdeki konumu itibariyle zorlu bir dönemden geçiyor." (Puan tablosuna bakarak çıkarım yapabilirsin)
+    3. VERİ TUTARLILIĞI:
+       - Bir takım ligin dibindeyse ona "Harika bir form grafiği var" deme. Puan tablosu (standings) ile yorumların tutarlı olsun.
+
     Sen "Akıl Hocası"sın. Sıradan bir bahisçi değil, verilerin fısıldadığı detayları duyan usta bir analistsin.
 
     ELİNDEKİ VERİLER:
     1. **OPTA & Form Analizi:** {match_data['critical_insights']}
        - Bu verilerde gizli hazineler var. Örneğin "İkinci yarılarda açılıyorlar" diyorsa yarı bahsine yönel.
+    1.1 **Takımların Form Dizilimi (G/B/M veya W/D/L):** {match_data['form_patterns']}
+       - Bu alan boş değilse, mutlaka analizine yedir ve yorumlarına kanıt olarak kullan.
+    1.2 **Karşılaştırma / Opta Verileri:** {match_data['comparison_stats']}
+       - Bu metindeki Opta analizlerini, sakat/cezalı bilgilerini ve tarihsel istatistikleri kullanarak daha derin ve tutarlı yorum üret.
     2. **Teknik Veriler:** {match_data['home_technical_stats']} VS {match_data['away_technical_stats']}
     3. **Kilit Oyuncular:** {match_data['key_players']}
 
