@@ -3,6 +3,7 @@ import asyncio
 import io
 import textwrap
 import re
+import os
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import time
@@ -11,6 +12,11 @@ import pandas as pd
 import plotly.graph_objects as go
 import google.generativeai as genai
 from modules import scraper, ai_engine, data_manager
+
+# --- BU BLOĞU MUTLAKA EKLE ---
+# Streamlit Cloud üzerinde Chromium tarayıcısını kurar
+os.system("playwright install chromium")
+# -----------------------------
 
 # --- KRİTİK DÜZELTME: Windows & Playwright Uyumluluğu ---
 if sys.platform == "win32":

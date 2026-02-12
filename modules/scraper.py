@@ -68,7 +68,7 @@ async def get_real_odds_from_iddaa(match_name, league_id):
 
     url = f"https://www.iddaa.com/program/futbol?league={league_id}"
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         page = await browser.new_page()
         try:
             await page.goto(url, timeout=60000)
@@ -131,7 +131,7 @@ def get_leagues_list():
     """Lig listesini çeker."""
     leagues = {}
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         page = browser.new_page()
         try:
             page.goto(BASE_URL, timeout=60000)
@@ -149,7 +149,7 @@ def get_fixture_and_standings(league_value):
     """Seçilen ligin fikstürünü (TARİHLİ) ve puan durumunu çeker."""
     data = {"matches": [], "standings": []}
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         page = browser.new_page()
         try:
             page.goto(BASE_URL, timeout=60000)
@@ -213,7 +213,7 @@ def get_match_deep_stats(match_url):
     print(f"🕵️‍♂️ Derin Analiz Başlıyor: {match_url}")
     
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         page = browser.new_page()
         try:
             page.goto(match_url, timeout=60000)
@@ -313,7 +313,7 @@ def get_league_detailed_stats(league_value):
     """Lig genel istatistiklerini (Gol/Şut vb.) çeker."""
     team_stats_list = []
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         page = browser.new_page()
         try:
             page.goto(BASE_URL, timeout=90000)
@@ -366,7 +366,7 @@ async def get_spor_toto_week_list():
     
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
             # Mobil görünüm değil desktop görünümü zorlayalım, yapı değişmesin
             page = await browser.new_page(viewport={"width": 1280, "height": 800})
             
